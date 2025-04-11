@@ -6,6 +6,13 @@ header: 'ゼロから始めるScala体験会'
 footer: ' ' # フッターは任意で設定
 ---
 
+<style>
+  section {
+    font-size: 30px;
+  }
+</style>
+
+
 # ゼロから始めるScala体験会
 
 ## 2025年4月24日（木）
@@ -35,7 +42,7 @@ footer: ' ' # フッターは任意で設定
 
 ---
 
-## 時間配分（目安）:**
+## 時間配分（目安）
 
 - Scala紹介と導入（10分）
 - Scalaの基本構文（5分）
@@ -109,11 +116,10 @@ println("Hello, World!")
 
 ```scala
 val fibs: LazyList[BigInt] = {
-  BigInt(0) #:: BigInt(1) #:: fibs.zip(fibs.tail).map {
-   case (a, b) => a + b
+  BigInt(0) #:: BigInt(1) #:: fibs.zip(fibs.tail).map { case (a, b) => 
+    a + b
   }
 }
-
 println(fibs.take(10).toList)
 // 出力: List(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
 ```
@@ -187,7 +193,7 @@ println(email.value)  // 出力: test@example.com
 ```
 
 * **メリット:** 簡単、シンプル
-* **デメリット:** 実行時に `Email` オブジェクトが生成されるオーバーヘッドがある
+* **デメリット:** 実行時に `Email` オブジェクト生成のーバーヘッド
 
 ---
 
@@ -236,8 +242,10 @@ println(e.value) // 出力: test@example.com
 結果が **成功** か **失敗** のどちらか一方であることを **型** で表現します。
 
 * `Either[L, R]` という型
-    * `L`: Left (左側) の型。慣習的に **失敗** 時の情報を入れる (例: エラーメッセージ `String`)
-    * `R`: Right (右側) の型。慣習的に **成功** 時の値を入れる (例: 正常な値 `Int`)
+    * `L`: Left（左側）の型。慣習的に **失敗** 時の情報を入れる
+      - 例: エラーメッセージ `String`
+    * `R`: Right（右側）の型。慣習的に **成功** 時の値を入れる 
+      - 例: 正常な値 `Int`
 
 ---
 
@@ -264,13 +272,11 @@ val failure: Either[String, Int] = Left("エラー発生")
 success match {
   case Right(value) => println(s"成功しました！ 値: $value") // こちらが実行される
   case Left(error)  => println(s"失敗しました… 理由: $error")
-}
-// 出力: 成功しました！ 値: 100
+} // 出力: 成功しました！ 値: 100
 failure match {
   case Right(value) => println(s"成功しました！ 値: $value")
   case Left(error)  => println(s"失敗しました… 理由: $error") // こちらが実行される
-}
-// 出力: 失敗しました… 理由: エラー発生
+} // 出力: 失敗しました… 理由: エラー発生
 ```
 
 ---
