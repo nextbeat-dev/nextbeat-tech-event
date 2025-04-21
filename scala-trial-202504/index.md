@@ -290,19 +290,16 @@ println(failure) // 出力: Left(エラー発生)
 
 ## バリデーション関数 (演習10分 in Scastie)
 
-`Email` オブジェクト内に `private` で定義します。
-
 ```scala
 // object Email { ... の中に追加
 
-  // private: Email オブジェクトの中からしか呼べない
   // 空文字列 (`""` や `" "`) でなければ Right、空文字列であれば Left
-  private def nonEmpty(value: String): Either[String, String] = {
+  def nonEmpty(value: String): Either[String, String] = {
     // value.trim で前後の空白を除去してから isEmpty でチェック
     ???
   }
   // `@` マークを含んでいれば Right、含んでいなければ Left
-  private def containsAtMark(value: String): Either[String, String] = {
+  def containsAtMark(value: String): Either[String, String] = {
     // value.contains でチェック
     ???
   }
@@ -329,7 +326,7 @@ if (条件) {
 ## バリデーション関数 (回答例)
 
 ```scala
-private def nonEmpty(value: String): Either[String, String] = {
+def nonEmpty(value: String): Either[String, String] = {
   // value.trim で前後の空白を除去してから isEmpty でチェック
   if (value.trim.isEmpty) {
     Left("Email cannot be empty") // 失敗 -> Left
@@ -338,7 +335,7 @@ private def nonEmpty(value: String): Either[String, String] = {
   }
 }
 
-private def containsAtMark(value: String): Either[String, String] = {
+def containsAtMark(value: String): Either[String, String] = {
   if (value.contains('@')) {
     Right(value) // 成功 -> Right
   } else {
@@ -390,7 +387,7 @@ private def containsAtMark(value: String): Either[String, String] = {
 object Email {
   opaque type Email = String
 
-  // --- バリデーション関数 ---
+  // --- バリデーション関数 (※privateに変更: Email オブジェクトからのみアクセスできる) ---
   private def nonEmpty(value: String): Either[String, String] =
     if (value.trim.isEmpty) Left("Email cannot be empty") else Right(value)
 
