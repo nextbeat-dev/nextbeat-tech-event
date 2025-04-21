@@ -44,38 +44,35 @@ footer: ' ' # フッターは任意で設定
 
 ## 時間配分（目安）
 
-- Scala紹介と導入（10分）
-- 値オブジェクト: `case class` vs `opaque type`（10分）
--  `Either` と関数合成による安全な生成（15分）
-- 値オブジェクトを使った型安全な処理（15分）
+- Scalaの紹介と導入（5分）
+- 「型」でドメイン概念を表す: 値オブジェクト（10分）
+- 値オブジェクトの型安全な生成（15分）
+- 値オブジェクトを使った型安全な処理（5分）
 - まとめ・質疑応答（10分）
 
-※Scastieの使い方とScalaの基本的な構文は補足資料をご覧ください
+※Scastieの使い方とScalaの基本的な構文は[補足資料](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202504/shared.pdf)をご覧ください。
 
 ---
 
-## Scala紹介と導入
+## Scalaの紹介と導入
 
 ---
 
 ## Scalaとは？ (1/2)
 
 * JVM (Java Virtual Machine) 上で動作する **静的型付け** 言語
+* Javaとの高い **相互運用性**
+    * Java のライブラリをそのまま利用できる
 * **オブジェクト指向** + **関数型プログラミング** の融合
     * 両方の良いところを活用できる！
 * 強力な **型システム**
     * コンパイル時にエラーを発見しやすく、堅牢なコードを書ける
     * **今日、このメリットを体験します！**
-* **型推論**
-    * 型を明記しなくても、コンパイラが型を推測してくれる
-      * コードが簡潔に
 
 ---
 
 ## Scalaとは？ (2/2)
 
-* Javaとの高い **相互運用性**
-    * Javaのライブラリをそのまま利用できる
 * **今日の焦点:**
     * Scalaの **型安全性**
     * **関数型プログラミング** の考え方の一部
@@ -117,16 +114,40 @@ println(fibs.take(10).toList)
 
 ---
 
-## 値オブジェクト: `case class` vs `opaque type` 
+## ちょっとScalaらしいコード
+
+```scala
+val fibs: LazyList[BigInt] = {
+  BigInt(0) #:: BigInt(1) #:: fibs.zip(fibs.tail).map { case (a, b) =>
+      println(s"Adding ${a} and ${b}")
+      a + b
+  }
+}
+
+println(fibs.take(5).toList)
+println("-------------------")
+println(fibs.take(6).toList)
+// Adding 0 and 1
+// Adding 1 and 1
+// Adding 1 and 2
+// List(0, 1, 1, 2, 3)
+// ------------------- 再評価はされない
+// Adding 2 and 3
+// List(0, 1, 1, 2, 3, 5)
+```
 
 ---
 
-## 「型」でドメイン概念を表す
+## 「型」でドメイン概念を表す：値オブジェクト
+
+---
+
+## 値オブジェクト：メールアドレスを「型」で表す
 
 **問題:** メールアドレスをただの `String` で扱うと？
 
 ```scala
-def sendEmail(address: String, subject: String): Unit = ???
+def sendEmail(email: String, subject: String): Unit = ???
 
 // こんな呼び出し方ができてしまう...
 sendEmail("これはメールアドレスじゃない", "テスト")
@@ -142,7 +163,7 @@ sendEmail("user@domain.com", "user-name") // 引数の順番ミスにも気づ�
 
 ---
 
-## 方法1: `case class` (シンプル！)
+## 方法1: `case class` による値オブジェクトの表現
 
 `case class` を使うと、簡単に独自の型を定義できます。
 
@@ -162,47 +183,64 @@ println(email.value)  // 出力: test@example.com
 
 ---
 
-## 方法2: `opaque type` (Scala 3 の機能)
+## 方法2: `opaque type` による値オブジェクトの表現
 
-実行時オーバーヘッドなしで型安全性を実現！
+実行時オーバーヘッドなしで型安全性を実現！(Scala 3 の機能)
+
+* **`opaque type Email = String`**
+  * `Email` 型を作るが、実行時は `String` として扱われる
+  * 定義したスコープ内では `Email` と `String` は同じ型として扱われる
 
 ```scala
 object Email {
   // opaque type を定義 (実体は String)
   opaque type Email = String
-  // ファクトリメソッド (インスタンス生成用、今は仮実装)
+  // ファクトリメソッド (同じスコープであれば、String と Email は同じ扱い)
   def from(value: String): Email = value
   // 拡張メソッド (内部の値へのアクセス用)
   extension (self: Email) def value: String = self
 }
-import Email.*
-val e: Email = Email.from("test@example.com")
-println(e.value) // 出力: test@example.com
-// 直接 String は代入できない！(コンパイルエラー)
-// val eBad: Email = "test@example.com"
 ```
 
 ---
 
 ## `opaque type` の特徴と比較
 
-* **`opaque type Email = String`**
-  * `Email` 型を作るが、コンパイル後は `String` として扱われる
 * **メリット:**
-  * **実行時オーバーヘッドゼロ！**（オブジェクト生成コストがない）
+  * **実行時オーバーヘッドゼロ！**
   * **コンパイル時** に `String` と `Email` の混同を防げる（型安全性）
 * **デメリット:**
   * `case class` より少し記述が増える
 
-**今回は `opaque type` を使って進めます！**
+```scala
+import Email.*
+val e: Email = Email.from("test@example.com")
+println(e) // 出力: test@example.com
+println(e.getClass) // 出力: class java.lang.String (実行時は String として扱われる)
+// 直接 String は代入できない！(コンパイルエラー)
+// val eBad: Email = "test@example.com"
+```
+---
+
+## 値オブジェクトの型安全な生成
 
 ---
 
-## `Either` と関数合成による安全な生成 
+## 値オブジェクトの型安全な生成
+
+opaque type によって、`Email` 型を作ることができました。
+しかし、`Email` の値を不正な文字列 (例: `""`, `"not-email"`) から生成することができてしまいます。
+
+```scala
+val invalidE1: Email = Email.from("") // 空文字列を渡してもコンパイルエラーにならない
+val invalidE2: Email = Email.from("not-email") // 不正なメールアドレスも渡せてしまう
+println(invalidE1) // 出力: ""
+println(invalidE2) // 出力: "not-email"
+```
 
 ---
 
-## 安全な値オブジェクト生成へ
+## 値オブジェクトの型安全な生成
 
 **目標:** `opaque type Email` を、 **不正な文字列** (例: `""`, `"not-email"`) からは **生成できない** ようにしたい。
 
@@ -216,36 +254,54 @@ println(e.value) // 出力: test@example.com
 
 ---
 
+## 成功 or 失敗 を表す型: `Either`
+
+結果が **成功** か **失敗** のどちらか一方であることを **型** で表現します。
+
+* `Either[L, R]` という型
+    * `L`: Left（左側）の型。慣習的に **失敗** 時の情報を入れる
+    * `R`: Right（右側）の型。慣習的に **成功** 時の値を入れる 
+
+```scala
+// 成功例: Right を使う。Int型の値 100 を持つ
+val success: Either[String, Int] = Right(100)
+// 失敗例: Left を使う。String型の "エラー発生" を持つ
+val failure: Either[String, Int] = Left("エラー発生")
+println(success) // 出力: Right(100)
+println(failure) // 出力: Left(エラー発生)
+```
+
+---
+
 ## バリデーション関数の準備
 
 今回はシンプルなチェック関数を自作します。
 (実務ではバリデーションライブラリを使うことが多いです)
 
-* **シグネチャ:** `String => Either[String, String]`
-    * 入力: `String`
-    * 出力: `Either[エラーメッセージ, 検証済み文字列]`
-
 * **作るチェック関数:**
     1.  `nonEmpty`: 空文字列 (`""` や `" "`) でないか？
     2.  `containsAtMark`: `@` マークを含んでいるか？
 
+* **シグネチャ:** `String => Either[String, String]`
+    * 入力: `String`
+    * 出力: `Either[エラーメッセージ, 検証済み文字列]`
+
 ---
 
-## バリデーション関数 (1/2)
-
-`Email` オブジェクト内に `private` で定義します。
+## バリデーション関数 (演習10分 in Scastie)
 
 ```scala
 // object Email { ... の中に追加
 
-  // private: Email オブジェクトの中からしか呼べない
-  private def nonEmpty(value: String): Either[String, String] = {
+  // 空文字列 (`""` や `" "`) でなければ Right、空文字列であれば Left
+  def nonEmpty(value: String): Either[String, String] = {
     // value.trim で前後の空白を除去してから isEmpty でチェック
-    if (value.trim.isEmpty) {
-      Left("Email cannot be empty") // 失敗 -> Left
-    } else {
-      Right(value) // 成功 -> Right
-    }
+    ???
+  }
+  // `@` マークを含んでいれば Right、含んでいなければ Left
+  def containsAtMark(value: String): Either[String, String] = {
+    // value.contains でチェック
+    ???
   }
 
 // }
@@ -253,20 +309,39 @@ println(e.value) // 出力: test@example.com
 
 ---
 
-## バリデーション関数 (コード 2/2)
+## 補足情報 if 式
+
+**if 式** は、条件に応じて異なる値を返すことができる式です。
 
 ```scala
-// object Email { ... の中に追加
+if (条件) {
+  // 条件が true の場合の処理
+} else {
+  // 条件が false の場合の処理
+}
+```
 
-  private def containsAtMark(value: String): Either[String, String] = {
-    if (value.contains('@')) {
-      Right(value) // 成功 -> Right
-    } else {
-      Left("Email must contain '@'") // 失敗 -> Left
-    }
+---
+
+## バリデーション関数 (回答例)
+
+```scala
+def nonEmpty(value: String): Either[String, String] = {
+  // value.trim で前後の空白を除去してから isEmpty でチェック
+  if (value.trim.isEmpty) {
+    Left("Email cannot be empty") // 失敗 -> Left
+  } else {
+    Right(value) // 成功 -> Right
   }
+}
 
-// }
+def containsAtMark(value: String): Either[String, String] = {
+  if (value.contains('@')) {
+    Right(value) // 成功 -> Right
+  } else {
+    Left("Email must contain '@'") // 失敗 -> Left
+  }
+}
 ```
 
 ---
@@ -283,37 +358,23 @@ println(e.value) // 出力: test@example.com
 
 ---
 
-## バリデーションの合成: `for` 式
+## 安全なファクトリメソッド `from` の実装
 
+`for` 式を使って、複数のバリデーションを **合成** します。
 `Either` に対する `for` 式は、途中で `Left` になったら、その後ろの処理は実行されずに、その `Left` が最終結果となります。
 
 ```scala
 // object Email { ... の中に追加
 
   // 複数のバリデーションを合成する関数
-  private def validate(input: String): Either[String, String] = {
+  def from(value: String): Either[String, Email] = {
     for {
-      s1 <- nonEmpty(input)      // 1. nonEmpty を実行。失敗(Left)ならここで終了
+      s1 <- nonEmpty(value)      // 1. nonEmpty を実行。失敗(Left)ならここで終了
       s2 <- containsAtMark(s1)   // 2. s1が成功(Right)の場合のみ実行。失敗ならここで終了
       // 他のチェックもここに追加できる
       // s3 <- checkDomain(s2)
     } yield s2 // 3. 全てのチェックが成功(Right)した場合、最後の結果(s2)が Right で包まれて返る
   }
-
-// }
-```
-
----
-
-## 安全なファクトリメソッド `from` の実装
-
-仮実装した `from` メソッドを、`validate` を使うように修正します。
-
-```scala
-// object Email { ... の from を修正
-
-  // 安全なファクトリメソッド
-  def from(value: String): Either[String, Email] = validate(value)
 
 // }
 ```
@@ -326,22 +387,19 @@ println(e.value) // 出力: test@example.com
 object Email {
   opaque type Email = String
 
-  // --- バリデーション関数 ---
+  // --- バリデーション関数 (※privateに変更: Email オブジェクトからのみアクセスできる) ---
   private def nonEmpty(value: String): Either[String, String] =
     if (value.trim.isEmpty) Left("Email cannot be empty") else Right(value)
 
   private def containsAtMark(value: String): Either[String, String] =
     if (value.contains('@')) Right(value) else Left("Email must contain '@'")
 
-  // --- バリデーション合成 ---
-  private def validate(input: String): Either[String, String] =
+  // --- 安全なファクトリメソッド (バリデーション合成) ---
+  def from(value: String): Either[String, Email] =
     for {
-      s1 <- nonEmpty(input)
+      s1 <- nonEmpty(value)
       s2 <- containsAtMark(s1)
     } yield s2
-
-  // --- 安全なファクトリメソッド ---
-  def from(value: String): Either[String, Email] = validate(value)
 
   // --- 拡張メソッド ---
   extension (self: Email) def value: String = self
@@ -350,7 +408,7 @@ object Email {
 
 ---
 
-## 試してみよう！ (デモ/演習 in Scastie)
+## 試してみよう！
 
 安全なファクトリメソッド `Email.from` を使ってみましょう。
 
@@ -379,7 +437,7 @@ No '@': Left(Email must contain '@')
 Empty then No '@': Left(Email cannot be empty) // 最初の nonEmpty で失敗
 ```
 
-* 不正な値からは `Left` が返るようになりました！
+* 不正な値からは `Left` が返されるようになりました！
 
 ---
 
@@ -392,53 +450,35 @@ Empty then No '@': Left(Email cannot be empty) // 最初の nonEmpty で失敗
 `Email.from` で **安全に生成された** `Email` 型だけを受け取る関数を定義してみましょう。
 
 ```scala
-import Email.*
-def processEmail(email: Email): Unit = {
+def sendEmail(email: Email, subject: String): Unit = {
   // Email.from によってバリデーション済みであることが保証されている！
-  println(s"Processing valid email: ${email.value}") // .value で String 値を取得
+  println(s"$email にメールを送信します。件名: $subject")
 }
-```
 
-* **メリット:**
-  * **コンパイラ** が `Email` 型以外の値 (例: `String`) を渡そうとするとエラーにしてくれる。
+// こんな呼び出し方はできない！
+// sendEmail("これはメールアドレスじゃない", "テスト")
+// sendEmail("", "件名")
+// sendEmail("user@domain.com", "user-name") // 引数の順番ミスにも気づける
+```
 
 ---
 
-## 型安全性の確認（1/2）
+## 型安全な関数を使う
 
-コンパイラが間違いを防いでくれる様子を見てみましょう。
+`Email.from` の型は `Either[String, Email]` なので、そのまま渡すことはできません。 `Either` の結果は、 `match` 式を使って取り出すことができます。
 
 ```scala
-import Email.*
-def processEmail(email: Email): Unit = {
-  println(s"Processing valid email: ${email.value}")
-}
 val validEmailResult = Email.from("test@example.com")
 val invalidEmailResult = Email.from("invalid-email")
-// --- これはコンパイルエラーになる！ ---
-// processEmail("test@example.com") // String は渡せない！
-// --- Email.from の結果 (Either) を使う必要がある ---
-println("Handling results...")
-```
 
-* `processEmail` に直接 `String` を渡せない！
-
----
-
-## 型安全性の確認（2/2）
-
-`Email.from` の結果は `Either[String, Email]` なので、`match` を使って安全に処理を分岐します。
-
-```scala
-// 前のスライドの続き
 validEmailResult match {
-  case Right(emailInstance) => processEmail(emailInstance)
+  case Right(emailInstance) => sendEmail(emailInstance, "テスト件名")
   case Left(error)          => println(s"Match Failed: $error")
 }
-// 出力: Processing valid email: test@example.com
+// 出力: test@example.com にメールを送信します。件名: テスト件名
+
 invalidEmailResult match {
-  case Right(emailInstance) => processEmail(emailInstance)
-  // Left(error) の場合は失敗処理
+  case Right(emailInstance) => sendEmail(emailInstance, "テスト件名")
   case Left(error)          => println(s"Match Failed: $error")
 }
 // 出力: Match Failed: Email must contain '@'
@@ -451,23 +491,20 @@ invalidEmailResult match {
 `match` の代わりに `fold` メソッドもよく使われます。
 
 ```scala
-// 前のスライドの続き
 println("\nUsing fold:")
+
 validEmailResult.fold(
   error => println(s"Fold Failed: $error"),  // 第1引数: Left の場合の処理
-  email => processEmail(email)               // 第2引数: Right の場合の処理
+  email => sendEmail(email, "テスト件名")    // 第2引数: Right の場合の処理
 )
-// 出力: Processing valid email: test@example.com
+// 出力: test@example.com にメールを送信します。件名: テスト件名
+
 invalidEmailResult.fold(
   error => println(s"Fold Failed: $error"),
-  email => processEmail(email)
+  email => sendEmail(email, "テスト件名") // こちらは実行されない
 )
 // 出力: Fold Failed: Email must contain '@'
 ```
-
----
-
-## まとめ・質疑応答 
 
 ---
 
@@ -507,6 +544,8 @@ invalidEmailResult.fold(
 
 ---
 
-## 質疑応答
+## 実際のコードを見てみましょう
 
-ご清聴ありがとうございました！
+---
+
+## 質疑応答
