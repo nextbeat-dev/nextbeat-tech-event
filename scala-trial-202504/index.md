@@ -114,6 +114,30 @@ println(fibs.take(10).toList)
 
 ---
 
+## ちょっとScalaらしいコード
+
+```scala
+val fibs: LazyList[BigInt] = {
+  BigInt(0) #:: BigInt(1) #:: fibs.zip(fibs.tail).map { case (a, b) =>
+      println(s"Adding ${a} and ${b}")
+      a + b
+  }
+}
+
+println(fibs.take(5).toList)
+println("-------------------")
+println(fibs.take(6).toList)
+// Adding 0 and 1
+// Adding 1 and 1
+// Adding 1 and 2
+// List(0, 1, 1, 2, 3)
+// ------------------- 再評価はされない
+// Adding 2 and 3
+// List(0, 1, 1, 2, 3, 5)
+```
+
+---
+
 ## 「型」でドメイン概念を表す：値オブジェクト
 
 ---
