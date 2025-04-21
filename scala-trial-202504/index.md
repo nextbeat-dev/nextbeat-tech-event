@@ -334,37 +334,23 @@ private def containsAtMark(value: String): Either[String, String] = {
 
 ---
 
-## バリデーションの合成: `for` 式
+## 安全なファクトリメソッド `from` の実装
 
+`for` 式を使って、複数のバリデーションを **合成** します。
 `Either` に対する `for` 式は、途中で `Left` になったら、その後ろの処理は実行されずに、その `Left` が最終結果となります。
 
 ```scala
 // object Email { ... の中に追加
 
   // 複数のバリデーションを合成する関数
-  private def validate(input: String): Either[String, String] = {
+  def from(value: String): Either[String, Email] = {
     for {
-      s1 <- nonEmpty(input)      // 1. nonEmpty を実行。失敗(Left)ならここで終了
+      s1 <- nonEmpty(value)      // 1. nonEmpty を実行。失敗(Left)ならここで終了
       s2 <- containsAtMark(s1)   // 2. s1が成功(Right)の場合のみ実行。失敗ならここで終了
       // 他のチェックもここに追加できる
       // s3 <- checkDomain(s2)
     } yield s2 // 3. 全てのチェックが成功(Right)した場合、最後の結果(s2)が Right で包まれて返る
   }
-
-// }
-```
-
----
-
-## 安全なファクトリメソッド `from` の実装
-
-仮実装した `from` メソッドを、`validate` を使うように修正します。
-
-```scala
-// object Email { ... の from を修正
-
-  // 安全なファクトリメソッド
-  def from(value: String): Either[String, Email] = validate(value)
 
 // }
 ```
@@ -384,15 +370,12 @@ object Email {
   private def containsAtMark(value: String): Either[String, String] =
     if (value.contains('@')) Right(value) else Left("Email must contain '@'")
 
-  // --- バリデーション合成 ---
-  private def validate(input: String): Either[String, String] =
+  // --- 安全なファクトリメソッド (バリデーション合成) ---
+  def from(value: String): Either[String, Email] =
     for {
-      s1 <- nonEmpty(input)
+      s1 <- nonEmpty(value)
       s2 <- containsAtMark(s1)
     } yield s2
-
-  // --- 安全なファクトリメソッド ---
-  def from(value: String): Either[String, Email] = validate(value)
 
   // --- 拡張メソッド ---
   extension (self: Email) def value: String = self
@@ -401,7 +384,7 @@ object Email {
 
 ---
 
-## 試してみよう！ (デモ/演習 in Scastie)
+## 試してみよう！
 
 安全なファクトリメソッド `Email.from` を使ってみましょう。
 
@@ -430,7 +413,7 @@ No '@': Left(Email must contain '@')
 Empty then No '@': Left(Email cannot be empty) // 最初の nonEmpty で失敗
 ```
 
-* 不正な値からは `Left` が返るようになりました！
+* 不正な値からは `Left` が返されるようになりました！
 
 ---
 
