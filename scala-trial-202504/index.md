@@ -313,16 +313,7 @@ println(e.value) // 出力: test@example.com
 // object Email { ... の from を修正
 
   // 安全なファクトリメソッド
-  def from(value: String): Either[String, Email] = {
-    validate(value) match {
-      // validate が成功(Right)した場合のみ Email 型にして返す
-      case Right(validatedValue) => Right(validatedValue) // String を Email 型にキャスト (OpaqueなのでOK)
-      // validate が失敗(Left)した場合は、そのまま Left を返す
-      case Left(error)           => Left(error)
-    }
-    // Note: .map(identity) や .map(v => v) と書いても同じ意味になります
-    // validate(value).map(identity)
-  }
+  def from(value: String): Either[String, Email] = validate(value)
 
 // }
 ```
@@ -350,8 +341,7 @@ object Email {
     } yield s2
 
   // --- 安全なファクトリメソッド ---
-  def from(value: String): Either[String, Email] =
-    validate(value).map(identity) // .map(identity) は成功時のみ値を適用
+  def from(value: String): Either[String, Email] = validate(value)
 
   // --- 拡張メソッド ---
   extension (self: Email) def value: String = self
