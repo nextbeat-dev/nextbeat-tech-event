@@ -44,17 +44,17 @@ footer: ' ' # フッターは任意で設定
 
 ## 時間配分（目安）
 
-- Scala紹介と導入（10分）
-- 値オブジェクト: `case class` vs `opaque type`（10分）
--  `Either` と関数合成による安全な生成（15分）
-- 値オブジェクトを使った型安全な処理（15分）
+- Scalaの紹介と導入（5分）
+- 「型」でドメイン概念を表す: 値オブジェクト（10分）
+- 値オブジェクトの型安全な生成（15分）
+- 値オブジェクトを使った型安全な処理（5分）
 - まとめ・質疑応答（10分）
 
-※Scastieの使い方とScalaの基本的な構文は補足資料をご覧ください
+※Scastieの使い方とScalaの基本的な構文は[補足資料](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202504/shared.pdf)をご覧ください。
 
 ---
 
-## Scala紹介と導入
+## Scalaの紹介と導入
 
 ---
 
@@ -114,16 +114,16 @@ println(fibs.take(10).toList)
 
 ---
 
-## 値オブジェクト: `case class` vs `opaque type` 
+## 「型」でドメイン概念を表す：値オブジェクト
 
 ---
 
-## 「型」でドメイン概念を表す
+## 値オブジェクト：メールアドレスを「型」で表す
 
-**問題:** メールアドレスをただの `String` で扱うと？
+**問題**: メールアドレスをただの `String` で扱うと？
 
 ```scala
-def sendEmail(address: String, subject: String): Unit = ???
+def sendEmail(email: String, subject: String): Unit = ???
 
 // こんな呼び出し方ができてしまう...
 sendEmail("これはメールアドレスじゃない", "テスト")
@@ -139,7 +139,7 @@ sendEmail("user@domain.com", "user-name") // 引数の順番ミスにも気づ�
 
 ---
 
-## 方法1: `case class` (シンプル！)
+## 方法1: `case class` による値オブジェクトの表現
 
 `case class` を使うと、簡単に独自の型を定義できます。
 
@@ -159,9 +159,9 @@ println(email.value)  // 出力: test@example.com
 
 ---
 
-## 方法2: `opaque type` (Scala 3 の機能)
+## 方法2: `opaque type` による値オブジェクトの表現
 
-実行時オーバーヘッドなしで型安全性を実現！
+実行時オーバーヘッドなしで型安全性を実現！(Scala 3 の機能)
 
 * **`opaque type Email = String`**
   * `Email` 型を作るが、実行時は `String` として扱われる
@@ -196,10 +196,13 @@ println(e.getClass) // 出力: class java.lang.String (実行時は String と�
 // 直接 String は代入できない！(コンパイルエラー)
 // val eBad: Email = "test@example.com"
 ```
+---
+
+## 値オブジェクトの型安全な生成
 
 ---
 
-## 安全な値オブジェクト生成へ
+## 値オブジェクトの型安全な生成
 
 opaque type によって、`Email` 型を作ることができました。
 しかし、`Email` の値を不正な文字列 (例: `""`, `"not-email"`) から生成することができてしまいます。
@@ -213,7 +216,7 @@ println(invalidE2) // 出力: "not-email"
 
 ---
 
-## 安全な値オブジェクト生成へ
+## 値オブジェクトの型安全な生成
 
 **目標:** `opaque type Email` を、 **不正な文字列** (例: `""`, `"not-email"`) からは **生成できない** ようにしたい。
 
@@ -426,10 +429,15 @@ Empty then No '@': Left(Email cannot be empty) // 最初の nonEmpty で失敗
 `Email.from` で **安全に生成された** `Email` 型だけを受け取る関数を定義してみましょう。
 
 ```scala
-def processEmail(email: Email): Unit = {
+def sendEmail(email: Email, subject: String): Unit = {
   // Email.from によってバリデーション済みであることが保証されている！
-  println(s"Processing valid email: $email")
+  println(s"$email にメールを送信します。件名: $subject")
 }
+
+// こんな呼び出し方はできない！
+// sendEmail("これはメールアドレスじゃない", "テスト")
+// sendEmail("", "件名")
+// sendEmail("user@domain.com", "user-name") // 引数の順番ミスにも気づける
 ```
 
 ---
@@ -443,13 +451,13 @@ val validEmailResult = Email.from("test@example.com")
 val invalidEmailResult = Email.from("invalid-email")
 
 validEmailResult match {
-  case Right(emailInstance) => processEmail(emailInstance)
+  case Right(emailInstance) => sendEmail(emailInstance, "テスト件名")
   case Left(error)          => println(s"Match Failed: $error")
 }
-// 出力: Processing valid email: test@example.com
+// 出力: test@example.com にメールを送信します。件名: テスト件名
 
 invalidEmailResult match {
-  case Right(emailInstance) => processEmail(emailInstance)
+  case Right(emailInstance) => sendEmail(emailInstance, "テスト件名")
   case Left(error)          => println(s"Match Failed: $error")
 }
 // 出力: Match Failed: Email must contain '@'
@@ -466,13 +474,13 @@ println("\nUsing fold:")
 
 validEmailResult.fold(
   error => println(s"Fold Failed: $error"),  // 第1引数: Left の場合の処理
-  email => processEmail(email)               // 第2引数: Right の場合の処理
+  email => sendEmail(email, "テスト件名")    // 第2引数: Right の場合の処理
 )
-// 出力: Processing valid email: test@example.com
+// 出力: test@example.com にメールを送信します。件名: テスト件名
 
 invalidEmailResult.fold(
   error => println(s"Fold Failed: $error"),
-  email => processEmail(email)
+  email => sendEmail(email, "テスト件名") // こちらは実行されない
 )
 // 出力: Fold Failed: Email must contain '@'
 ```
