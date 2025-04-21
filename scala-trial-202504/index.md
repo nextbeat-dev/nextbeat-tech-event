@@ -163,39 +163,53 @@ println(email.value)  // 出力: test@example.com
 
 実行時オーバーヘッドなしで型安全性を実現！
 
+* **`opaque type Email = String`**
+  * `Email` 型を作るが、実行時は `String` として扱われる
+  * 定義したスコープ内では `Email` と `String` は同じ型として扱われる
+
 ```scala
 object Email {
   // opaque type を定義 (実体は String)
   opaque type Email = String
-  // ファクトリメソッド (インスタンス生成用、今は仮実装)
+  // ファクトリメソッド (同じスコープであれば、String と Email は同じ扱い)
   def from(value: String): Email = value
   // 拡張メソッド (内部の値へのアクセス用)
   extension (self: Email) def value: String = self
 }
-import Email.*
-val e: Email = Email.from("test@example.com")
-println(e.value) // 出力: test@example.com
-// 直接 String は代入できない！(コンパイルエラー)
-// val eBad: Email = "test@example.com"
 ```
 
 ---
 
 ## `opaque type` の特徴と比較
 
-* **`opaque type Email = String`**
-  * `Email` 型を作るが、コンパイル後は `String` として扱われる
 * **メリット:**
-  * **実行時オーバーヘッドゼロ！**（オブジェクト生成コストがない）
+  * **実行時オーバーヘッドゼロ！**
   * **コンパイル時** に `String` と `Email` の混同を防げる（型安全性）
 * **デメリット:**
   * `case class` より少し記述が増える
 
-**今回は `opaque type` を使って進めます！**
+```scala
+import Email.*
+val e: Email = Email.from("test@example.com")
+println(e) // 出力: test@example.com
+println(e.getClass) // 出力: class java.lang.String (実行時は String として扱われる)
+// 直接 String は代入できない！(コンパイルエラー)
+// val eBad: Email = "test@example.com"
+```
 
 ---
 
-## `Either` と関数合成による安全な生成 
+## 安全な値オブジェクト生成へ
+
+opaque type によって、`Email` 型を作ることができました。
+しかし、`Email` の値を不正な文字列 (例: `""`, `"not-email"`) から生成することができてしまいます。
+
+```scala
+val invalidE1: Email = Email.from("") // 空文字列を渡してもコンパイルエラーにならない
+val invalidE2: Email = Email.from("not-email") // 不正なメールアドレスも渡せてしまう
+println(invalidE1) // 出力: ""
+println(invalidE2) // 出力: "not-email"
+```
 
 ---
 
