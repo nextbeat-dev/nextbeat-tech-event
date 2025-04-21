@@ -426,53 +426,30 @@ Empty then No '@': Left(Email cannot be empty) // 最初の nonEmpty で失敗
 `Email.from` で **安全に生成された** `Email` 型だけを受け取る関数を定義してみましょう。
 
 ```scala
-import Email.*
 def processEmail(email: Email): Unit = {
   // Email.from によってバリデーション済みであることが保証されている！
-  println(s"Processing valid email: ${email.value}") // .value で String 値を取得
+  println(s"Processing valid email: $email")
 }
 ```
 
-* **メリット:**
-  * **コンパイラ** が `Email` 型以外の値 (例: `String`) を渡そうとするとエラーにしてくれる。
-
 ---
 
-## 型安全性の確認（1/2）
+## 型安全な関数を使う
 
-コンパイラが間違いを防いでくれる様子を見てみましょう。
+`Email.from` の型は `Either[String, Email]` なので、そのまま渡すことはできません。 `Either` の結果は、 `match` 式を使って取り出すことができます。
 
 ```scala
-import Email.*
-def processEmail(email: Email): Unit = {
-  println(s"Processing valid email: ${email.value}")
-}
 val validEmailResult = Email.from("test@example.com")
 val invalidEmailResult = Email.from("invalid-email")
-// --- これはコンパイルエラーになる！ ---
-// processEmail("test@example.com") // String は渡せない！
-// --- Email.from の結果 (Either) を使う必要がある ---
-println("Handling results...")
-```
 
-* `processEmail` に直接 `String` を渡せない！
-
----
-
-## 型安全性の確認（2/2）
-
-`Email.from` の結果は `Either[String, Email]` なので、`match` を使って安全に処理を分岐します。
-
-```scala
-// 前のスライドの続き
 validEmailResult match {
   case Right(emailInstance) => processEmail(emailInstance)
   case Left(error)          => println(s"Match Failed: $error")
 }
 // 出力: Processing valid email: test@example.com
+
 invalidEmailResult match {
   case Right(emailInstance) => processEmail(emailInstance)
-  // Left(error) の場合は失敗処理
   case Left(error)          => println(s"Match Failed: $error")
 }
 // 出力: Match Failed: Email must contain '@'
@@ -485,13 +462,14 @@ invalidEmailResult match {
 `match` の代わりに `fold` メソッドもよく使われます。
 
 ```scala
-// 前のスライドの続き
 println("\nUsing fold:")
+
 validEmailResult.fold(
   error => println(s"Fold Failed: $error"),  // 第1引数: Left の場合の処理
   email => processEmail(email)               // 第2引数: Right の場合の処理
 )
 // 出力: Processing valid email: test@example.com
+
 invalidEmailResult.fold(
   error => println(s"Fold Failed: $error"),
   email => processEmail(email)
