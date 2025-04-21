@@ -227,22 +227,41 @@ println(invalidE2) // 出力: "not-email"
 
 ---
 
+## 成功 or 失敗 を表す型: `Either`
+
+結果が **成功** か **失敗** のどちらか一方であることを **型** で表現します。
+
+* `Either[L, R]` という型
+    * `L`: Left（左側）の型。慣習的に **失敗** 時の情報を入れる
+    * `R`: Right（右側）の型。慣習的に **成功** 時の値を入れる 
+
+```scala
+// 成功例: Right を使う。Int型の値 100 を持つ
+val success: Either[String, Int] = Right(100)
+// 失敗例: Left を使う。String型の "エラー発生" を持つ
+val failure: Either[String, Int] = Left("エラー発生")
+println(success) // 出力: Right(100)
+println(failure) // 出力: Left(エラー発生)
+```
+
+---
+
 ## バリデーション関数の準備
 
 今回はシンプルなチェック関数を自作します。
 (実務ではバリデーションライブラリを使うことが多いです)
 
-* **シグネチャ:** `String => Either[String, String]`
-    * 入力: `String`
-    * 出力: `Either[エラーメッセージ, 検証済み文字列]`
-
 * **作るチェック関数:**
     1.  `nonEmpty`: 空文字列 (`""` や `" "`) でないか？
     2.  `containsAtMark`: `@` マークを含んでいるか？
 
+* **シグネチャ:** `String => Either[String, String]`
+    * 入力: `String`
+    * 出力: `Either[エラーメッセージ, 検証済み文字列]`
+
 ---
 
-## バリデーション関数 (1/2)
+## バリデーション関数 (演習10分 in Scastie)
 
 `Email` オブジェクト内に `private` で定義します。
 
@@ -250,13 +269,15 @@ println(invalidE2) // 出力: "not-email"
 // object Email { ... の中に追加
 
   // private: Email オブジェクトの中からしか呼べない
+  // 空文字列 (`""` や `" "`) でなければ Right、空文字列であれば Left
   private def nonEmpty(value: String): Either[String, String] = {
     // value.trim で前後の空白を除去してから isEmpty でチェック
-    if (value.trim.isEmpty) {
-      Left("Email cannot be empty") // 失敗 -> Left
-    } else {
-      Right(value) // 成功 -> Right
-    }
+    ???
+  }
+  // `@` マークを含んでいれば Right、含んでいなければ Left
+  private def containsAtMark(value: String): Either[String, String] = {
+    // value.contains でチェック
+    ???
   }
 
 // }
@@ -264,20 +285,39 @@ println(invalidE2) // 出力: "not-email"
 
 ---
 
-## バリデーション関数 (コード 2/2)
+## 補足情報 if 式
+
+**if 式** は、条件に応じて異なる値を返すことができる式です。
 
 ```scala
-// object Email { ... の中に追加
+if (条件) {
+  // 条件が true の場合の処理
+} else {
+  // 条件が false の場合の処理
+}
+```
 
-  private def containsAtMark(value: String): Either[String, String] = {
-    if (value.contains('@')) {
-      Right(value) // 成功 -> Right
-    } else {
-      Left("Email must contain '@'") // 失敗 -> Left
-    }
+---
+
+## バリデーション関数 (回答例)
+
+```scala
+private def nonEmpty(value: String): Either[String, String] = {
+  // value.trim で前後の空白を除去してから isEmpty でチェック
+  if (value.trim.isEmpty) {
+    Left("Email cannot be empty") // 失敗 -> Left
+  } else {
+    Right(value) // 成功 -> Right
   }
+}
 
-// }
+private def containsAtMark(value: String): Either[String, String] = {
+  if (value.contains('@')) {
+    Right(value) // 成功 -> Right
+  } else {
+    Left("Email must contain '@'") // 失敗 -> Left
+  }
+}
 ```
 
 ---
