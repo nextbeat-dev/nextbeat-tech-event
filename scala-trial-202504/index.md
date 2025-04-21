@@ -144,7 +144,7 @@ println(fibs.take(6).toList)
 
 ## 値オブジェクト：メールアドレスを「型」で表す
 
-**問題**: メールアドレスをただの `String` で扱うと？
+**問題:** メールアドレスをただの `String` で扱うと？
 
 ```scala
 def sendEmail(email: String, subject: String): Unit = ???
