@@ -2,8 +2,8 @@
 
 このリポジトリは、Scalaの体験会用のスライドを格納しています。
 
-- index.md: メインスライド
-- shared.md: 参加者に配布用のスライド
+- [index.md](index.md): メインスライド
+- [shared.md](shared.md): 参加者に配布用のスライド
 
 # スライドのビルド
 
