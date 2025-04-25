@@ -13,9 +13,9 @@ footer: ' ' # フッターは任意で設定
 </style>
 
 
-# ゼロから始めるScala体験会
+# ゼロから始めるScala体験会 in 大阪
 
-## 2025年4月24日（木）
+## 2025年5月29日（木）
 ## 株式会社ネクストビート
 
 ---
@@ -25,9 +25,10 @@ footer: ' ' # フッターは任意で設定
 * **ターゲット:**
     * Scalaに興味がある方
     * プログラミング経験はあるが、Scalaは初心者レベル
-* **ゴール:** 1時間で...
+* **ゴール:** 1時間30分で...
     * Scalaの魅力（特に **型安全性**, **表現力**, **関数型** の考え方）の一端を体験
     * `opaque type` や `Either`、関数合成を使って **堅牢なコード** を書くメリットを体感してもらう
+    * given/usingを使った型クラスの作り方を体験してもらう
 
 ---
 
@@ -50,7 +51,7 @@ footer: ' ' # フッターは任意で設定
 - 値オブジェクトを使った型安全な処理（5分）
 - まとめ・質疑応答（10分）
 
-※Scastieの使い方とScalaの基本的な構文は[補足資料](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202504/shared.pdf)をご覧ください。
+※Scastieの使い方とScalaの基本的な構文は[補足資料](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202505/shared.pdf)をご覧ください。
 
 ---
 
