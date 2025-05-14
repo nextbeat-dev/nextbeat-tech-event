@@ -581,7 +581,7 @@ given Show[String] with {
 
 ---
 
-## given/usingを使った型クラスの作り方（演習）
+## 演習：given/usingを使った型クラスの作り方
 
 Boolean型に対する `Show` インスタンスを `given` を使って定義し、`display` 関数で表示してみましょう。
 
@@ -599,7 +599,7 @@ display(false)
 
 ---
 
-## given/usingを使った型クラスの作り方（演習 回答例）
+## 演習：given/usingを使った型クラスの作り方（回答例）
 
 ```scala
 given booleanShow: Show[Boolean] with {
@@ -612,6 +612,71 @@ given booleanShow: Show[Boolean] with {
 // 試してみましょう
 display(true)
 display(false)
+```
+
+---
+
+## 型クラスの別の例: Monoid
+
+`Monoid` は、ある型 `A` に対して、以下の2つの条件を満たす操作を定義する型クラスです。
+
+1.  **結合律 (Associativity):** `(a combine b) combine c` は `a combine (b combine c)` と等しい。
+2.  **単位元 (Identity Element):** ある特別な要素 `empty` が存在し、`a combine empty` も `empty combine a` も `a` と等しい。
+
+数値の加算 (`+`) と `0`、文字列の結合 (`++`) と `""`、リストの連結 (`++`) と `Nil` などが Monoid の例です。
+
+---
+
+## 演習：Monoid 型クラスの定義と given インスタンス
+
+`Monoid` 型クラスに対して、`given` インスタンスを定義してみましょう。
+
+```scala
+// Monoid 型クラスの定義
+trait Monoid[A] {
+  def combine(x: A, y: A): A // 要素を組み合わせる操作
+  def empty: A // 単位元
+}
+// Int (加算) に対する Monoid インスタンス
+given intMonoid: Monoid[Int] with {
+  def combine(x: Int, y: Int): Int = ???
+  def empty: Int = ???
+}
+// String (結合) に対する Monoid インスタンス
+given stringMonoid: Monoid[String] with {
+  def combine(x: String, y: String): String = ???
+  def empty: String = ???
+}
+// List[A] (連結) に対する Monoid インスタンス
+given listMonoid[A]: Monoid[List[A]] with {
+  def combine(x: List[A], y: List[A]): List[A] = ???
+  def empty: List[A] = ???
+}
+```
+
+---
+
+## 演習：Monoid 型クラスの利用
+
+`Monoid` 型クラスを使うと、様々な型のリストを汎用的な関数で畳み込むことができます。
+
+```scala
+// Monoid[A] が利用可能であれば、List[A] を畳み込める関数
+def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
+  ???
+}
+// Intのリストを畳み込む (加算)
+val numbers = List(1, 2, 3, 4, 5)
+println(s"Sum of numbers: ${combineAll(numbers)}") // 出力: Sum of numbers: 15
+
+// Stringのリストを畳み込む (結合)
+val words = List("Hello", " ", "World", "!")
+println(s"Combined words: ${combineAll(words)}") // 出力: Hello World!
+
+// List[Int]のリストを畳み込む (連結)
+val listOfLists = List(List(1, 2), List(3), List(4, 5))
+println(s"lists: ${combineAll(listOfLists)}") 
+// 出力: Combined lists: List(1, 2, 3, 4, 5)
 ```
 
 ---
