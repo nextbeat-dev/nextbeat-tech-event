@@ -8,7 +8,7 @@ footer: ' ' # フッターは任意で設定
 
 <style>
   section {
-    font-size: 30px;
+    font-size: 28px;
   }
 </style>
 
@@ -510,7 +510,113 @@ invalidEmailResult.fold(
 
 ---
 
-## Scalaの魅力 再確認
+# given/usingを使った型クラスの作り方
+
+---
+
+## given/usingを使った型クラスの作り方
+
+型クラスは、特定の操作（メソッド）をサポートする型を抽象化するデザインパターンです。Scala 3では `given` と `using` を使って型クラスをより扱いやすく記述できます。
+
+- **型クラスの定義:**
+  - 共通の操作を定義する `trait` を使います。
+
+- **型クラスインスタンスの定義 (`given`):**
+  - 特定の型が型クラスの操作をどのように実装するかを `given` を使って定義します。
+
+- **型クラスの利用 (`using`):**
+  - 型クラスのインスタンスが必要な関数やメソッドの引数に `using` を付けます
+  * コンパイラが適切な `given` インスタンスを自動で見つけて渡してくれます。
+
+---
+
+## given/usingを使った型クラスの作り方（コード例）
+
+例として、値を文字列に変換する `Show` という型クラスを考えます。
+
+```scala
+// 1. 型クラスの定義 (Show トレイト)
+trait Show[A] {
+  def show(value: A): String
+}
+// 2. Int型とString型に対するShowインスタンスの定義 (given)
+given intShow: Show[Int] with {
+  def show(value: Int): String = value.toString
+}
+given stringShow: Show[String] with {
+  def show(value: String): String = s""""$value"""" // 文字列は引用符で囲む
+}
+// 3. 型クラスを利用する関数 (using)
+def display[A](value: A)(using s: Show[A]): Unit = {
+  println(s.show(value))
+}
+// 4. 型クラスの利用
+display(123)      // 出力: 123 (Intのgivenインスタンスが使われる)
+display("hello")  // 出力: "hello" (Stringのgivenインスタンスが使われる)
+```
+
+---
+
+## given/usingを使った型クラスの作り方（コード例） - 補足
+
+- givenインスタンスは名前を省略することも多いです
+
+```scala
+// 1. 型クラスの定義 (Show トレイト)
+trait Show[A] {
+  def show(value: A): String
+}
+// 2. Int型に対するShowインスタンスの定義 (given)
+given Show[Int] with {
+  def show(value: Int): String = value.toString
+}
+// 3. String型に対するShowインスタンスの定義 (given)
+given Show[String] with {
+  def show(value: String): String = s""""$value"""" // 文字列は引用符で囲む
+}
+...
+```
+
+- `given Show[Int]` のようにすれば名前を省略できます。
+
+---
+
+## given/usingを使った型クラスの作り方（演習）
+
+Boolean型に対する `Show` インスタンスを `given` を使って定義し、`display` 関数で表示してみましょう。
+
+```scala
+// Boolean型に対するShowインスタンスの定義 (given)
+// trueの場合は "True", falseの場合は "False" と表示するように実装してください
+given booleanShow: Show[Boolean] with {
+  def show(value: Boolean): String = ???
+}
+
+// 試してみましょう
+display(true)
+display(false)
+```
+
+---
+
+## given/usingを使った型クラスの作り方（演習 回答例）
+
+```scala
+given booleanShow: Show[Boolean] with {
+  def show(value: Boolean): String = value match {
+    case true => "True"
+    case false => "False"
+  }
+}
+
+// 試してみましょう
+display(true)
+display(false)
+```
+
+---
+
+## まとめ: 体験したこと ✨
 
 今日体験した機能はScalaの魅力のほんの一部です。
 
