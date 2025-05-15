@@ -28,7 +28,7 @@ footer: ' ' # フッターは任意で設定
 * **ゴール:** 1時間30分で...
     * Scalaの魅力（特に **型安全性**, **表現力**, **関数型** の考え方）の一端を体験
     * `opaque type` や `Either`、関数合成を使って **堅牢なコード** を書くメリットを体感してもらう
-    * given/usingを使った型クラスの作り方を体験してもらう
+    * `given`/`using`を使った型クラスの作り方を体験してもらう
 
 ---
 
@@ -45,13 +45,14 @@ footer: ' ' # フッターは任意で設定
 
 ## 時間配分（目安）
 
-- Scalaの紹介と導入（10分）, 18:40-18:50
-- 値オブジェクト：case class VS. opaque type（10分）, 18:50-19:00
-- Eitherを使った値オブジェクトのバリデーション（10分）, 19:00-19:10
-- 値オブジェクトの型安全な生成, 19:10-19:20
-- 休憩（10分）, 19:20-19:30
-- given/usingを使った型クラスの作り方（10分）, 19:30-19:40
-- まとめ・プロダクションコード・質疑応答（10分）,19:40-20:00
+- Scalaの紹介と導入（10分）: 18:40-18:50
+- 値オブジェクト：case class VS. opaque type（10分）: 18:50-19:00
+- Eitherを使った値オブジェクトのバリデーション（10分）: 19:00-19:10
+- 値オブジェクトの型安全な生成（10分）: 19:10-19:20
+- 休憩（10分）: 19:20-19:30
+- given/usingを使った型クラスの作り方（15分）: 19:30-19:45
+- まとめ・プロダクションコード・質疑応答（15分）: 19:45-20:00
+- 20:00〜懇親会（🍣）
 
 ※Scastieの使い方とScalaの基本的な構文は[補足資料](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202505/shared.pdf)をご覧ください。
 
@@ -114,30 +115,6 @@ println(fibs.take(10).toList)
 
 * `LazyList`: 必要になるまで計算しないリスト
 * `.map`: 関数型らしいデータ変換
-
----
-
-## ちょっとScalaらしいコード
-
-```scala
-val fibs: LazyList[BigInt] = {
-  BigInt(0) #:: BigInt(1) #:: fibs.zip(fibs.tail).map { case (a, b) =>
-      println(s"Adding ${a} and ${b}")
-      a + b
-  }
-}
-
-println(fibs.take(5).toList)
-println("-------------------")
-println(fibs.take(6).toList)
-// Adding 0 and 1
-// Adding 1 and 1
-// Adding 1 and 2
-// List(0, 1, 1, 2, 3)
-// ------------------- 再評価はされない
-// Adding 2 and 3
-// List(0, 1, 1, 2, 3, 5)
-```
 
 ---
 
@@ -291,7 +268,9 @@ println(failure) // 出力: Left(エラー発生)
 
 ---
 
-## バリデーション関数 (演習10分 in Scastie)
+## 演習：バリデーション関数 (10分)
+
+- [Scastieへのリンク](https://scastie.scala-lang.org/kmizu/K5JfdHyVRNWrVKyBp90RMA/6)
 
 ```scala
 // object Email { ... の中に追加
@@ -312,25 +291,27 @@ println(failure) // 出力: Left(エラー発生)
 
 ---
 
-## バリデーション関数 (回答例)
+## 演習：バリデーション関数 (回答例)
 
 ```scala
-def nonEmpty(value: String): Either[String, String] = {
-  // value.trim で前後の空白を除去してから isEmpty でチェック
-  if (value.trim.isEmpty) {
-    Left("Email cannot be empty") // 失敗 -> Left
-  } else {
-    Right(value) // 成功 -> Right
+// object Email { ... の中に追加
+  def nonEmpty(value: String): Either[String, String] = {
+    // value.trim で前後の空白を除去してから isEmpty でチェック
+    if (value.trim.isEmpty) {
+      Left("Email cannot be empty") // 失敗 -> Left
+    } else {
+      Right(value) // 成功 -> Right
+    }
   }
-}
 
-def containsAtMark(value: String): Either[String, String] = {
-  if (value.contains('@')) {
-    Right(value) // 成功 -> Right
-  } else {
-    Left("Email must contain '@'") // 失敗 -> Left
+  def containsAtMark(value: String): Either[String, String] = {
+    if (value.contains('@')) {
+      Right(value) // 成功 -> Right
+    } else {
+      Left("Email must contain '@'") // 失敗 -> Left
+    }
   }
-}
+// }
 ```
 
 ---
@@ -581,37 +562,20 @@ given Show[String] with {
 
 ---
 
-## 演習：given/usingを使った型クラスの作り方
+## given/usingを使った新しい型クラスの作り方
 
-Boolean型に対する `Show` インスタンスを `given` を使って定義し、`display` 関数で表示してみましょう。
-
-```scala
-// Boolean型に対するShowインスタンスの定義 (given)
-// trueの場合は "True", falseの場合は "False" と表示するように実装してください
-given booleanShow: Show[Boolean] with {
-  def show(value: Boolean): String = ???
-}
-
-// 試してみましょう
-display(true)
-display(false)
-```
-
----
-
-## 演習：given/usingを使った型クラスの作り方（回答例）
+- `Boolean`型に対する `Show` インスタンスを使って定義します。
 
 ```scala
-given booleanShow: Show[Boolean] with {
+given Show[Boolean] with {
   def show(value: Boolean): String = value match {
     case true => "True"
     case false => "False"
   }
 }
 
-// 試してみましょう
-display(true)
-display(false)
+display(true) // True
+display(false) // False
 ```
 
 ---
@@ -627,9 +591,10 @@ display(false)
 
 ---
 
-## 演習：Monoid 型クラスの定義と given インスタンス
+## 演習：Monoid型クラスのインスタンス定義（10分）
 
-`Monoid` 型クラスに対して、`given` インスタンスを定義してみましょう。
+- `Monoid` 型クラスに対して、`given` インスタンスを定義してみましょう。
+  - [Scastieへのリンク](https://scastie.scala-lang.org/IVVbCVJVQUujKtbxvxWhxQ)
 
 ```scala
 trait Monoid[A] {
@@ -652,7 +617,7 @@ given Monoid[List[A]] with {
 
 ---
 
-## 演習：Monoid 型クラスの定義と given インスタンス（回答例）
+## 演習：Monoid型クラスのインスタンス定義（回答）
 
 ```scala
 trait Monoid[A] {
@@ -675,51 +640,24 @@ given Monoid[List[A]] with {
 
 ---
 
-## 演習：Monoid 型クラスの利用とusing
-
-`???`の部分を実装して、`combineAll` 関数を完成させてみましょう。
+## Monoid型クラスの利用とusing
 
 ```scala
 // Monoid[A] が利用可能であれば、List[A] を畳み込める関数
-def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
-  ???
+def combine[A](list: List[A])(using m: Monoid[A]): A = {
+  list.foldLeft(m.empty)(m.combine) // foldLeftを使って畳み込む
 }
-// Intのリストを畳み込む (加算)
+// List[Int]を畳み込む (合計)
 val numbers = List(1, 2, 3, 4, 5)
-println(s"Sum of numbers: ${combineAll(numbers)}") // 出力: Sum of numbers: 15
+println(s"Sum: ${combine(numbers)}") // Sum: 15
 
-// Stringのリストを畳み込む (結合)
-val words = List("Hello", " ", "World", "!")
-println(s"Combined words: ${combineAll(words)}") // 出力: Hello World!
+// List[String]を畳み込む (結合)
+val words = List("Hello", ", ", "World", "!")
+println(s"Combined words: ${combine(words)}") // Hello, World!
 
 // List[Int]のリストを畳み込む (連結)
 val listOfLists = List(List(1, 2), List(3), List(4, 5))
-println(s"lists: ${combineAll(listOfLists)}") 
-// 出力: Combined lists: List(1, 2, 3, 4, 5)
-```
-
----
-
-## 演習：Monoid 型クラスの利用とusing（回答例）
-
-- `foldLeft`を使うのがポイントです。
-
-```scala
-// Monoid[A] が利用可能であれば、List[A] を畳み込める関数
-def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
-  list.foldLeft(m.empty)(m.combine)
-}
-// Intのリストを畳み込む (加算)
-val numbers = List(1, 2, 3, 4, 5)
-println(s"Sum of numbers: ${combineAll(numbers)}") // 出力: Sum of numbers: 15
-
-// Stringのリストを畳み込む (結合)
-val words = List("Hello", " ", "World", "!")
-println(s"Combined words: ${combineAll(words)}") // 出力: Hello World!
-
-// List[Int]のリストを畳み込む (連結)
-val listOfLists = List(List(1, 2), List(3), List(4, 5))
-println(s"lists: ${combineAll(listOfLists)}") 
+println(s"lists: ${combine(listOfLists)}")
 // 出力: Combined lists: List(1, 2, 3, 4, 5)
 ```
 
@@ -739,12 +677,13 @@ println(s"lists: ${combineAll(listOfLists)}")
 
 ## （任意）次のステップ
 
-* **Scala公式サイト:**
-    * Scala 3 Book: [https://docs.scala-lang.org/scala3/book/introduction.html](https://docs.scala-lang.org/scala3/book/introduction.html)
-    * Tour of Scala: [https://docs.scala-lang.org/tour/tour-of-scala.html](https://docs.scala-lang.org/tour/tour-of-scala.html)
-* **オンライン学習:**
-    * Scala Exercises: [https://www.scala-exercises.org/](https://www.scala-exercises.org/)
-* **Scastieで色々試してみる！**
+- **Scala公式サイト:**
+  - Scala 3 Book: [https://docs.scala-lang.org/scala3/book/introduction.html](https://docs.scala-lang.org/scala3/book/introduction.html)
+  -  Tour of Scala: [https://docs.scala-lang.org/tour/tour-of-scala.html](https://docs.scala-lang.org/tour/tour-of-scala.html)
+- **オンライン学習:**
+  - Scala Exercises: [https://www.scala-exercises.org/](https://www.scala-exercises.org/)
+- **Scastieで色々試してみる！**
+  - [https://scastie.scala-lang.org/](https://scastie.scala-lang.org/)
 
 ---
 
