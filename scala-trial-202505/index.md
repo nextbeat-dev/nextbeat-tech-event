@@ -632,23 +632,19 @@ display(false)
 `Monoid` 型クラスに対して、`given` インスタンスを定義してみましょう。
 
 ```scala
-// Monoid 型クラスの定義
 trait Monoid[A] {
   def combine(x: A, y: A): A // 要素を組み合わせる操作
   def empty: A // 単位元
 }
-// Int (加算) に対する Monoid インスタンス
-given intMonoid: Monoid[Int] with {
+given Monoid[Int] with {
   def combine(x: Int, y: Int): Int = ???
   def empty: Int = ???
 }
-// String (結合) に対する Monoid インスタンス
-given stringMonoid: Monoid[String] with {
+given Monoid[String] with {
   def combine(x: String, y: String): String = ???
   def empty: String = ???
 }
-// List[A] (連結) に対する Monoid インスタンス
-given listMonoid[A]: Monoid[List[A]] with {
+given Monoid[List[A]] with {
   def combine(x: List[A], y: List[A]): List[A] = ???
   def empty: List[A] = ???
 }
@@ -656,14 +652,62 @@ given listMonoid[A]: Monoid[List[A]] with {
 
 ---
 
-## 演習：Monoid 型クラスの利用
+## 演習：Monoid 型クラスの定義と given インスタンス（回答例）
 
-`Monoid` 型クラスを使うと、様々な型のリストを汎用的な関数で畳み込むことができます。
+```scala
+trait Monoid[A] {
+  def combine(x: A, y: A): A // 要素を組み合わせる操作
+  def empty: A // 単位元
+}
+given Monoid[Int] with {
+  def combine(x: Int, y: Int): Int = x + y
+  def empty: Int = 0
+}
+given Monoid[String] with {
+  def combine(x: String, y: String): String = x + y
+  def empty: String = ???
+}
+given Monoid[List[A]] with {
+  def combine(x: List[A], y: List[A]): List[A] = x ++ y
+  def empty: List[A] = Nil
+}
+```
+
+---
+
+## 演習：Monoid 型クラスの利用とusing
+
+`???`の部分を実装して、`combineAll` 関数を完成させてみましょう。
 
 ```scala
 // Monoid[A] が利用可能であれば、List[A] を畳み込める関数
 def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
   ???
+}
+// Intのリストを畳み込む (加算)
+val numbers = List(1, 2, 3, 4, 5)
+println(s"Sum of numbers: ${combineAll(numbers)}") // 出力: Sum of numbers: 15
+
+// Stringのリストを畳み込む (結合)
+val words = List("Hello", " ", "World", "!")
+println(s"Combined words: ${combineAll(words)}") // 出力: Hello World!
+
+// List[Int]のリストを畳み込む (連結)
+val listOfLists = List(List(1, 2), List(3), List(4, 5))
+println(s"lists: ${combineAll(listOfLists)}") 
+// 出力: Combined lists: List(1, 2, 3, 4, 5)
+```
+
+---
+
+## 演習：Monoid 型クラスの利用とusing（回答例）
+
+- `foldLeft`を使うのがポイントです。
+
+```scala
+// Monoid[A] が利用可能であれば、List[A] を畳み込める関数
+def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
+  list.foldLeft(m.empty)(m.combine)
 }
 // Intのリストを畳み込む (加算)
 val numbers = List(1, 2, 3, 4, 5)
