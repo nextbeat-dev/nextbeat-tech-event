@@ -36,7 +36,7 @@ footer: ' ' # フッターは任意で設定
 
 * **ツール:** **Scastie** (ブラウザで動くScala環境)
     * URL: [https://scastie.scala-lang.org/](https://scastie.scala-lang.org/)
-    * Scala 3モードで利用します
+    * デフォルトでScala 3モードで動きます
 * **形式:**
     * 説明とデモが中心
     * ときどき、Scastieで簡単なコードを試す **演習時間** を設けます
@@ -644,20 +644,20 @@ given Monoid[List[A]] with {
 
 ```scala
 // Monoid[A] が利用可能であれば、List[A] を畳み込める関数
-def combine[A](list: List[A])(using m: Monoid[A]): A = {
+def combineAll[A](list: List[A])(using m: Monoid[A]): A = {
   list.foldLeft(m.empty)(m.combine) // foldLeftを使って畳み込む
 }
 // List[Int]を畳み込む (合計)
 val numbers = List(1, 2, 3, 4, 5)
-println(s"Sum: ${combine(numbers)}") // Sum: 15
+println(s"Sum: ${combineAll(numbers)}") // Sum: 15
 
 // List[String]を畳み込む (結合)
 val words = List("Hello", ", ", "World", "!")
-println(s"Combined words: ${combine(words)}") // Hello, World!
+println(s"Combined words: ${combineAll(words)}") // Hello, World!
 
 // List[Int]のリストを畳み込む (連結)
 val listOfLists = List(List(1, 2), List(3), List(4, 5))
-println(s"lists: ${combine(listOfLists)}")
+println(s"lists: ${combineAll(listOfLists)}")
 // 出力: Combined lists: List(1, 2, 3, 4, 5)
 ```
 
