@@ -34,12 +34,15 @@ footer: ' ' # フッターは任意で設定
 
 ## ツールと進め方
 
-* **ツール:** **Scastie** (ブラウザで動くScala環境)
+- **ツール:** **Scastie** (ブラウザで動くScala環境)
     * URL: [https://scastie.scala-lang.org/](https://scastie.scala-lang.org/)
-    * デフォルトでScala 3モードで動きます
-* **形式:**
-    * 説明とデモが中心
-    * ときどき、Scastieで簡単なコードを試す **演習時間** を設けます
+  - デフォルトでScala 3モードで動きます
+- **形式:**
+  - 説明とデモが中心
+  - ときどき、Scastieで簡単なコードを試す **演習時間** を設けます
+- Scalaの基本文法やScastieの使い方については補足資料をご覧ください。
+  - [https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202505/shared.pdf](https://github.com/nextbeat-dev/nextbeat-tech-event/blob/main/scala-trial-202505/shared.pdf)
+
 
 ---
 
