@@ -1,0 +1,18 @@
+# ディレクトリ構成
+
+```
+├── .clinerules
+├── .git
+├── .gitignore
+├── README.md
+├── scala-trial-202504
+│   ├── index.md
+│   ├── index.pdf
+│   └── shared.md
+│   └── shared.pdf
+└── scala-trial-202505
+    ├── index.md
+    ├── index.pdf
+    └── shared.md
+    └── shared.pdf
+ ```
