@@ -750,7 +750,7 @@ given Monoid[String] with {
   def combine(x: String, y: String): String = ???
   def empty: String = ???
 }
-given Monoid[List[A]] with {
+given [A]: Monoid[List[A]] with {
   def combine(x: List[A], y: List[A]): List[A] = ???
   def empty: List[A] = ???
 }
@@ -777,7 +777,7 @@ given Monoid[String] with {
   def combine(x: String, y: String): String = x + y
   def empty: String = "" // Stringの単位元は空文字列
 }
-given Monoid[List[A]] with {
+given [A]: Monoid[List[A]] with {
   def combine(x: List[A], y: List[A]): List[A] = x ++ y
   def empty: List[A] = Nil
 }
