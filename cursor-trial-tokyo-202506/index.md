@@ -2,17 +2,17 @@
 marp: true
 theme: gaia
 paginate: true
-header: 'Cursorを使ったAIコーディング体験会 in 東京'
+header: 'Cursorを使ったAIコーディング体験会'
 footer: '株式会社ネクストビート'
 ---
 
 <style>
   section {
-    font-size: 28px;
+    font-size: 26px;
   }
 </style>
 
-#  Cursorを使ったAIコーディング体験会 in 東京
+#  Cursorを使ったAIコーディング体験会
 ## ～AIとのペアプログラミングを体験しよう～
 
 **2025年06月19日（木）**
@@ -27,9 +27,9 @@ footer: '株式会社ネクストビート'
 | 18:30-18:40 | 会社紹介                                      |
 | 18:40-18:50 | **講義：生成AI・AIエージェント・Cursor入門**  |
 | 18:50-19:00 | **Cursor 環境設定・基本操作**                 | 
-| 19:00-19:20 | **演習1：簡易タスクリストアプリ with Cursor** |
+| 19:00-19:20 | **演習：簡易タスクリストアプリ - HTML/JS作成** |
 | 19:20-19:30 | 休憩                                          |
-| 19:30-19:50 | **演習2：簡易メモアプリ with Cursor**         |
+| 19:30-19:50 | **演習：簡易タスクリストアプリ - 機能追加/スタイリング**       |
 | 19:50-20:00 | まとめ・質疑応答                              |
 
 ---
@@ -51,7 +51,7 @@ footer: '株式会社ネクストビート'
 
 * **生成AI (Generative AI):** 新しいコンテンツ (テキスト, 画像, **コード**) を生成するAI。
 * **AIエージェント (AI Agent):** 自律的にタスクを実行するAI。コーディング支援も高度化。
-    * 例: Cursor, GitHub Copilot (支援型) 〜 Devin (自律型)
+  * 例: Cursor, GitHub Copilot (支援型) 〜 Claude Code, Codex, Jules, Devin (自律型)
 
 ---
 
@@ -61,8 +61,6 @@ footer: '株式会社ネクストビート'
 * **AIとの対話 (`Ctrl+L` / `Cmd+L`)** や **インライン指示 (`Ctrl+K` / `Cmd+K`)** でコーディングを加速。
 * コード生成、リファクタリング、デバッグ、ドキュメント作成などをAIがサポート。
 * **無料版**でも強力な機能を体験可能！
-
-![Cursor Logo](https://www.cursor.com/icon.png)
 
 ---
 
@@ -115,16 +113,17 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 <img src="img/cursor-start.png" alt="Cursorの起動画面" width="25%">
 
-![Cursorのプロジェクトオープン](img/cursor-open-project.png)
+<img src="img/cursor-open-project.png" alt="Cursorのプロジェクトオープン" width="25%">
 
 ---
 
-## 第3部：演習1 (19:00 - 19:20)
-### 簡易タスクリストアプリ with Cursor (JavaScript)
+## 第3部：演習 (19:00 - 19:20)
+
+### 簡易タスクリストアプリ
 
 ---
 
-### 演習1：目標
+### 演習：目標
 
 **HTML、CSS、JavaScriptを使ったシンプルなタスクリストアプリをCursorと一緒に作ってみましょう！**
 
@@ -136,7 +135,7 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
-### 演習1：プロンプト例（HTML作成）
+### 演習：プロンプト例（HTML作成）
 
 **HTMLの骨組み作成**
 
@@ -148,23 +147,86 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 入力フィールド、追加ボタン、タスク一覧表示エリアが必要です。
  ```
 
+- Cursorが生成したHTMLを確認し、修正が不要なら「accept」をクリック。
+
 ---
 
-### 演習1：プロンプト例（.jsファイル作成）
+### 演習：スクリーンショット（HTML作成プロンプト）
+
+<img src="img/cursor-todo-html1.png" alt="HTML生成プロンプト" width="75%">
+
+---
+
+### 演習：スクリーンショット（HTML作成結果）
+
+<img src="img/cursor-todo-html2.png" alt="HTML生成結果" width="75%">
+
+---
+
+### 演習：プロンプト例（.jsファイル作成）
 
 **基本的なJavaScriptのロジック (タスク追加と表示)を作成**
 
-- `script.js` ファイルを作成し、HTMLから読み込む。
+- `script.js` ファイルを作成し、HTMLから読み込む（JSファイルは空）。
+
+```html
+<head>
+    ...
+    <script src="script.js" defer></script>
+</head>
+```
+
+- Add context -> Files and Foldersから追加:
+  - `index.html`, `script.js` を選択
+  
 - Cursorにチャットやインライン編集で依頼:
 
 ```
-(HTMLの要素を指定しつつ)
 入力されたテキストをタスクとしてリストに追加し、表示するJavaScriptを書いて。
 ```
 
+- Cursorが生成したJavaScriptを確認し、修正が不要なら「accept」をクリック。
+
+
 ---
 
-### 演習1：プロンプト例 (タスクの完了・削除機能)
+### 演習：スクリーンショット（JavaScript作成プロンプト）
+
+<img src="img/cursor-todo-js1.png" alt="JavaScript生成プロンプト" width="75%">
+
+---
+
+### 演習：スクリーンショット（JavaScript作成結果）
+
+<img src="img/cursor-todo-js2.png" alt="JavaScript生成結果" width="75%">
+
+---
+
+### 演習：HTMLを開く
+
+- `index.html` ファイルをChromeなどのブラウザで開いて、タスクリストアプリの基本的な動作を確認。
+
+---
+
+### 演習：スクリーンショット（タスクリストアプリの動作確認）
+
+<img src="img/cursor-todo-app1.png" alt="タスクリストアプリの動作確認" width="75%">
+
+---
+
+## 休憩 (19:20 - 19:30)
+
+☕️ ごゆっくりどうぞ！
+
+---
+
+## 第4部：演習 (19:30 - 19:50)
+
+### 簡易タスクリストアプリ - 機能追加/スタイリング
+
+---
+
+### 演習：プロンプト例 (タスクの完了・削除機能)
 
 - Cursorに機能追加を依頼:
 
@@ -173,12 +235,37 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 各タスクに削除ボタンも付けて、クリックしたらそのタスクを削除できるようにして。
 ```
 
+- Cursorが生成したコードを確認し、必要に応じて修正。
+
 ---
 
 
-### 演習1：プロンプト例 (CSSでスタイリング)
+### 演習：スクリーンショット（修正プロンプト）
 
-- `style.css` ファイルを作成し、HTMLから読み込む。
+<img src="img/cursor-todo-revise1.png" alt="修正プロンプト" width="75%">
+
+---
+
+### 演習：スクリーンショット（修正結果）
+
+<img src="img/cursor-todo-revise2.png" alt="修正結果" width="75%">
+
+---
+
+### 演習：タスクリストアプリの動作確認
+
+- 再度 `index.html` をブラウザで開いて、タスクの完了・削除機能が動作することを確認
+
+<img src="img/cursor-todo-app2.png" alt="修正版アプリ" width="75%">
+
+---
+
+### 演習：プロンプト例 (CSSでスタイリング)
+
+- `style.css` ファイルを作成し、HTMLから読み込む
+  - `<link rel="stylesheet" href="style.css">` を `<head>` 内に追加
+- Add context -> Files and Foldersから追加:
+  - `style.css` を選択
 - Cursorにデザインを依頼:
 
 ```
@@ -190,81 +277,29 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
-## 休憩 (19:20 - 19:30)
+### 演習：スクリーンショット（CSS作成プロンプト）
 
-☕️ ごゆっくりどうぞ！
-
----
-
-## 演習2 (19:30 - 19:50)
-### 簡易メモアプリ with Cursor (JavaScript)
+<img src="img/cursor-todo-css1.png" alt="CSS生成プロンプト" width="75%">
 
 ---
 
-### 演習2：目標
+### 演習：スクリーンショット（CSS作成結果）
 
-**演習1を応用して、Markdown形式で入力できる簡易メモアプリを作成しましょう！**
-
-* **機能要件：**
-
-1.  テキストエリアにMarkdown形式でメモを入力できる。
-2.  入力されたメモをリアルタイム (またはボタンで) プレビューできる。
-3.  メモをローカルストレージに保存できる。
-4.  保存されたメモを読み込める。
+<img src="img/cursor-todo-css2.png" alt="CSS生成結果" width="75%">
 
 ---
 
-### 演習2：プロンプト例（HTMLと基本JS構造）
+### 演習：HTMLを開く
 
-- 新しいファイル (例: `memo.html`, `memo.js`, `memo.css`) を準備。
-- Cursorに依頼:
-
-```
-Markdown対応の簡易メモアプリを作りたい。
-左側にテキスト入力エリア、右側にプレビューエリアがあるHTML構造と、
-基本的なJavaScriptの雛形をください。
-```
+- `index.html` ファイルを再度ブラウザで開いて、タスクリストアプリの見た目や動作を確認。
 
 ---
 
-### 演習2：プロンプト例（Markdownプレビュー機能）
+### 演習：スクリーンショット（タスクリストアプリの動作確認）
 
-- プレビュー機能の実装を依頼
-- 外部ライブラリ (例: Marked.js) の利用も検討。
+<img src="img/cursor-todo-app3.png" alt="タスクリストアプリの動作確認" width="75%">
 
-```
-テキストエリアに入力されたMarkdownをリアルタイムでプレビューする機能を追加して。
-必要ならMarked.jsなどのライブラリを使ってください。CDN経由でOK。
-```
-
----
-
-### 演習2：ステップ・プロンプト例 (ローカルストレージの利用)
-
-- ローカルストレージへの保存と読み込み機能を追加
-- Cursorに機能追加を依頼:
-
-```
-メモの内容をブラウザのローカルストレージに保存する機能と、
-ページ読み込み時に保存されたメモを読み込む機能を追加してください。
-```
-
----
-
-### 演習2：ステップ・プロンプト例 (UI改善や機能追加)
-
-- Cursorに相談しながら改善:
-
-```
-保存ボタンや新規作成ボタンを追加したい。
-プレビューエリアのデザインを調整してほしい。
-```
-
-**ポイント：** Cursorに「既存のコードをリファクタリングして」や「この関数の意味を教えて」と頼むのも有効です！
-
----
-
-## 第5部：まとめ・質疑応答 (19:50 - 20:00)
+- 配色などが微妙に変わっているのがわかりますね！
 
 ---
 
