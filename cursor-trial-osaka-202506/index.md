@@ -324,12 +324,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ### 懇親会のご案内
 
-- **20:00から9Fにて懇親会**を開催します！ (任意参加)。
+- **20:00から懇親会**を開催します！ (任意参加)。
 
 **本日はご参加いただき、ありがとうございました！**
 
 **アンケートにご協力ください**
 
-[アンケートはこちら](https://forms.gle/ghfyPkYdcNm4vSpa9)
+[アンケートはこちら](https://forms.gle/bq4n8zzUVKFBnupw5)
 
 ![QRコード](img/feedback-qr.png)
