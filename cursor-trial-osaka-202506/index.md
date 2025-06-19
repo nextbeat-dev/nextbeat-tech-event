@@ -73,6 +73,7 @@ footer: '株式会社ネクストビート'
 * お手元のPCに **Cursor** はインストール済みですか？
     * 最初の起動まで済ませておいてください。
 * Wi-Fi接続を確認してください (ゲストWi-Fiあり)。
+    * Cursorの動作にはインターネット接続が必要です。
 * 困ったら遠慮なくスタッフに声をかけてください！
 
 ---
@@ -163,6 +164,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
+<center>
+デモ
+</center>
+
+---
+
 ### 演習：プロンプト例（.jsファイル作成）
 
 **基本的なJavaScriptのロジック (タスク追加と表示)を作成**
@@ -202,6 +209,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
+<center>
+デモ
+</center>
+
+---
+
 ### 演習：HTMLを開く
 
 - `index.html` ファイルをChromeなどのブラウザで開いて、タスクリストアプリの基本的な動作を確認。
@@ -211,6 +224,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 ### 演習：スクリーンショット（タスクリストアプリの動作確認）
 
 <img src="img/cursor-todo-app1.png" alt="タスクリストアプリの動作確認" width="75%">
+
+---
+
+<center>
+デモ
+</center>
 
 ---
 
@@ -252,6 +271,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
+<center>
+デモ
+</center>
+
+---
+
 ### 演習：タスクリストアプリの動作確認
 
 - 再度 `index.html` をブラウザで開いて、タスクの完了・削除機能が動作することを確認
@@ -289,6 +314,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 
 ---
 
+<center>
+デモ
+</center>
+
+---
+
 ### 演習：HTMLを開く
 
 - `index.html` ファイルを再度ブラウザで開いて、タスクリストアプリの見た目や動作を確認。
@@ -300,6 +331,12 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 <img src="img/cursor-todo-app3.png" alt="タスクリストアプリの動作確認" width="75%">
 
 - 配色などが微妙に変わっているのがわかりますね！
+
+---
+
+<center>
+デモ
+</center>
 
 ---
 
@@ -331,5 +368,4 @@ git clone https://github.com/nextbeat-dev/mini-app.git
 **アンケートにご協力ください**
 
 [アンケートはこちら](https://forms.gle/bq4n8zzUVKFBnupw5)
-
 ![QRコード](img/feedback-qr.png)
