@@ -234,3 +234,9 @@
 NotebookLMのハンズオンで適切なソースが見つからない場合は、以下のPDFをお使いください。
 
 [株式会社ネクストビート会社概要](https://raw.githubusercontent.com/nextbeat-dev/nextbeat-tech-event/refs/heads/main/sales-ai-workshop-202507/nb_corporate_guide_20250604.pdf)
+
+## 「保育士の現状と主な取組」PDF
+
+NotebookLMのハンズオンで使うための追加PDF資料です。
+
+[こちら](https://www.mhlw.go.jp/content/11907000/000661531.pdf)からダウンロードできます。
