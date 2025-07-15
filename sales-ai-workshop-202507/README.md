@@ -233,4 +233,4 @@
 
 NotebookLMのハンズオンで適切なソースが見つからない場合は、以下のPDFをお使いください。
 
-[株式会社ネクストビート会社概要](nb_corporate_guide_20250604.pdf)
+[株式会社ネクストビート会社概要](https://raw.githubusercontent.com/nextbeat-dev/nextbeat-tech-event/refs/heads/main/sales-ai-workshop-202507/nb_corporate_guide_20250604.pdf)
