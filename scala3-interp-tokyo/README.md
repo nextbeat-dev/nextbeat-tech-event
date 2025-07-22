@@ -5,9 +5,3 @@
 ```bash
 ./build-slide.sh # slide.pdf が生成
 ```
-
-スライド（HTML）ビルド：
-
-```bash
-./build-slide-html.sh # slide.html が生成
-```
