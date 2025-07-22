@@ -30,7 +30,9 @@ footer: '株式会社ネクストビート'
 
 <script type="module">
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs';
-mermaid.initialize({ startOnLoad: true });
+mermaid.initialize({ 
+  startOnLoad: true ,
+});
 </script>
 
 # Scala 3で作る数式インタプリタ
@@ -42,14 +44,14 @@ mermaid.initialize({ startOnLoad: true });
 
 ## 本日の流れ
 
-| 時間        | 内容                                          |
-| ----------- | --------------------------------------------- |
-| 18:30-18:40 | 会社紹介                                      |
-| 18:40-18:50 | イントロ：コンピュータは数式をどう理解する？ |
-| 18:50-19:00 | Step 1: プログラムの"設計図"を作ってみよう    |
-| 19:00-19:15 | ハンズオン（前半）：数式インタプリタを作る  |
-| 19:15-19:25 | 休憩                                          |
-| 19:25-19:35 | Step 2：設計図を動かしてみよう               |
+| 時間        | 内容                                            |
+| ----------- | ---------------------------------------------  |
+| 18:30-18:40 | 会社紹介                                        |
+| 18:40-18:45 | イントロ：プログラミング言語を作るって？          |      
+| 18:45-19:00 | Step 1: 抽象構文木を設計しよう                    |  
+| 19:00-19:15 | ハンズオン（前半）：数式インタプリタを作る            |
+| 19:15-19:25 | 休憩                                            |
+| 19:25-19:35 | Step 2：言語機能を追加してみよう                     |    
 | 19:35-19:50 | ハンズオン（後半）：言語機能を追加する      |
 | 19:50-20:00 | まとめ・質疑応答                              |
 
@@ -81,7 +83,7 @@ mermaid.initialize({ startOnLoad: true });
 
 ---
 
-## Step 1: プログラムの"設計図"を作ってみよう
+## Step 1: 抽象構文木を設計しよう
 
 ---
 
@@ -91,18 +93,19 @@ mermaid.initialize({ startOnLoad: true });
 
 人間の理解：
 - 掛け算が優先
-- `2 * 3 = 6`
-- `1 + 6 = 7`
+-   `1 + (2 * 3)`
+- → `1 + 6`
+- → `7`
 
-**コンピュータには「優先順位」という概念がない！**
+**しかし……コンピュータには「優先順位」という概念がない！**
 
 ---
 
-## 抽象構文木（AST）：プログラムの設計図
+## 抽象構文木（AST）：コンピュータに「やさしい」プログラムの表現
 
 `1 + 2 * 3` を「木」の形で表現する
 
-<pre class="mermaid">
+<pre class="mermaid" style="font-size: 12px;">
 graph TD
     A(("`**+**`")) --> B(("1"))
     A --> C(("`**x**`"))
@@ -112,7 +115,6 @@ graph TD
 
 - 木の構造が計算順序を表現
 - 優先順位は木の形に埋め込まれる
-
 
 ---
 
@@ -126,6 +128,7 @@ enum Exp {
 ```
 
 使用例：
+
 ```scala
 import Exp.*
 
@@ -215,26 +218,6 @@ println(eval(exp))  // 7
 
 ---
 
-## テストを書こう
-
-```scala
-import munit.FunSuite
-
-class EvaluatorSuite extends FunSuite {
-  test("1 + 1 == 2") {
-    val e = tInt(1) |+| tInt(1)
-    assertEquals(eval(e), 2)
-  }
-  
-  test("2 * 3 + 4 == 10") {
-    val e = (tInt(2) |*| tInt(3)) |+| tInt(4)
-    assertEquals(eval(e), 10)
-  }
-}
-```
-
----
-
 ## ハンズオンタイム（15分）
 
 **やってみよう！**
@@ -245,6 +228,7 @@ class EvaluatorSuite extends FunSuite {
 4. いろいろな式を評価してみる
 
 **ヒント：**
+
 - `(10 + 20) * 3` はどう表現する？
 - `100 / (2 + 3)` は？
 
@@ -254,13 +238,13 @@ class EvaluatorSuite extends FunSuite {
 
 ---
 
-## Step 2：設計図を動かしてみよう
+## Step 2：言語機能を追加してみよう
 
 ---
 
 ## プログラミング言語に必要な機能
 
-今まで：数式だけ
+これまで：数式だけ
 
 これから追加したい機能：
 1. **変数**：値に名前をつける
@@ -289,11 +273,11 @@ enum Exp {
 
 ## 変数を扱うインタプリタ
 
-環境（変数名→値のマップ）を追加：
+- 環境（変数名→値のマップ）を追加：
+- 既存の処理を`evalRec`に移動
 
 ```scala
 import scala.collection.mutable.{Map => MMap}
-
 def eval(e: Exp, env: MMap[String, Int]): Int = {
   def evalRec(e: Exp): Int = e match {
     case VInt(value) => value
@@ -304,7 +288,6 @@ def eval(e: Exp, env: MMap[String, Int]): Int = {
       val v = evalRec(expr)
       env(name) = v  // 環境に登録
       v
-      
     case Ident(name) =>
       env.getOrElse(name, sys.error(s"Undefined: $name"))
   }
@@ -350,14 +333,18 @@ case BinExp(">", lhs, rhs) =>
   if (evalRec(lhs) > evalRec(rhs)) 1 else 0
 case BinExp("==", lhs, rhs) => 
   if (evalRec(lhs) == evalRec(rhs)) 1 else 0
+case BinExp("!=", lhs, rhs) => 
+  if (evalRec(lhs) != evalRec(rhs)) 1 else 0
 ```
 
 補助関数も追加：
+
 ```scala
 extension (a: Exp) {
   def |<|(b: Exp): Exp = BinExp("<", a, b)
   def |>|(b: Exp): Exp = BinExp(">", a, b)
   def |==|(b: Exp): Exp = BinExp("==", a, b)
+  def |!=|(b: Exp): Exp = BinExp("!=", a, b)
 }
 ```
 
@@ -405,29 +392,21 @@ eval(prog, MMap.empty)  // 10
 
 ---
 
-## 練習問題
+## ハンズオンタイム（15分）
 
-**1. 最大値を求める**
-```scala
-// a = 10; b = 15; if (a > b) a else b
-```
+**やってみよう！**
 
-**2. 絶対値を求める**
-```scala
-// x = -5; if (x < 0) -x else x
-```
+1. 変数機能を実装する
+2. if式を実装する
+3. 発展問題に挑戦する
 
-**3. 三項演算を模倣**
-```scala
-// score = 85; 
-// grade = if (score >= 90) 5 
-//         else if (score >= 80) 4 
-//         else 3
-```
+**ヒント：**
+- 環境は`MMap.empty[String, Int]`で初期化
+- 未定義変数の参照はエラーになるよう注意
 
 ---
 
-## 発展：繰り返し（while式）
+## 発展：繰り返し（while式）の追加
 
 ```scala
 enum Exp {
@@ -445,7 +424,7 @@ case While(condition, body) =>
 
 ---
 
-## while式の使用例
+## 繰り返しの使用例
 
 ```scala
 // i = 0; sum = 0;
@@ -471,22 +450,7 @@ val prog = SeqExp(List(
 
 ---
 
-## ハンズオンタイム（15分）
-
-**やってみよう！**
-
-1. 変数機能を実装する
-2. if式を実装する
-3. 練習問題に挑戦する
-4. 余裕があればwhile式も！
-
-**ヒント：**
-- 環境は`MMap.empty[String, Int]`で初期化
-- 未定義変数の参照はエラーになるよう注意
-
----
-
-## JSONで構文を表現する（おまけ）
+## おまけ：JSONで構文を表現する
 
 構文解析を避けて、JSONで表現：
 
@@ -543,8 +507,7 @@ val prog = SeqExp(List(
 ## 参考資料
 
 - **Scala 3公式サイト**: https://scala-lang.org/
-- **本日のコード**: GitHub（後日公開）
-- **書籍**:
+- **参考書籍**:
   - 「Go言語で作るインタプリタ」
   - 「WEB+DB PRESS Vol.125」
 
@@ -555,10 +518,7 @@ val prog = SeqExp(List(
 
 ## ありがとうございました！
 
-**株式会社ネクストビート**
-エンジニア採用も積極的に行っています
+**アンケートへのご協力をお願いします**
+URL: [https://forms.gle/KfnqcYfKpmwwPshw8](https://forms.gle/KfnqcYfKpmwwPshw8)
 
-HP: https://www.nextbeat.co.jp/
-
-**Nextbeat Tech Bar**
-定期的に技術イベントを開催中！
+![QRコード](img/qrcode.png)
