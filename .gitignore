@@ -1,3 +1,5 @@
 .bsp/
 .scala-build/
 .metals/
+.mastra/
+node_modules/

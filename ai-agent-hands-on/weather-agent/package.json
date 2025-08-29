@@ -1,0 +1,36 @@
+{
+  "name": "weather-agent",
+  "version": "1.0.0",
+  "description": "Mastra天気情報エージェント - Open-Meteo APIを使ったリアルタイム天気取得",
+  "main": "index.js",
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "1.2.22",
+    "@google/generative-ai": "^0.24.1",
+    "@mastra/core": "^0.13.1",
+    "@mastra/libsql": "^0.13.1",
+    "@mastra/loggers": "^0.10.6",
+    "@mastra/memory": "^0.12.1",
+    "ai": "^4.0.0",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "mastra": "^0.10.20",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:mastra.ai)",
+      "WebFetch(domain:dev.to)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": []
+  }
+}
