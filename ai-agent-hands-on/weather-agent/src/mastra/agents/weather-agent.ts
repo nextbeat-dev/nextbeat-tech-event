@@ -33,7 +33,7 @@ export const weatherAgent = new Agent({
   
   親しみやすく、実用的で安全に配慮した情報を提供してください。`,
   model: google('gemini-1.5-flash', {
-    apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    apiKey: process.env.GEMINI_API_KEY,
   }),
   tools: {
     weatherApiTool,

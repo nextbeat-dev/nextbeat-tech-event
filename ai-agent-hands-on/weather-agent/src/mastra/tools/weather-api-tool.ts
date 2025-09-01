@@ -29,7 +29,7 @@ export const weatherApiTool = createTool({
     console.log('contextの内容:', context);
     
     try {
-      // まず都市の座標を取得（Open-Meteo Geocoding API）
+      // 都市の座標を取得（Open-Meteo Geocoding API）
       const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ja&format=json`;
       
       const geoResponse = await fetch(geoUrl);

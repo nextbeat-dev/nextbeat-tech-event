@@ -5,11 +5,11 @@ backgroundColor: #fff
 color: #333
 paginate: true
 header: 'Mastra AI Agent Hands-on'
-footer: '© Your Name or Company'
+footer: '©️2025 nextbeat Co., Ltd.'
 ---
 
-# Mastraで作る！
-## AIエージェント開発ハンズオン
+# AIエージェンを作ろう!
+## Mastraを使ったAIエージェント作成
 
 ---
 
@@ -35,9 +35,10 @@ footer: '© Your Name or Company'
 
 ### 自己紹介
 
-- **名前**: （あなたの名前）
-- **所属**: （あなたの所属）
-- **経歴**: （あなたの経歴や専門分野など）
+- **名前**: 水島宏太（みずしま こうた）
+  - ネットでは[@kmizu](https://x.com/kmizu)として活動しています
+- **所属**: 株式会社ネクストビート
+  - テクノロジーエヴァンジェリスト
 - **今日伝えたいこと**:
   - AIエージェント開発の楽しさと可能性
   - Mastraを使った開発の第一歩を踏み出すサポート
@@ -52,8 +53,6 @@ footer: '© Your Name or Company'
 - 必要な**ツール**（Web検索、計算など）を使いこなす
 - **状況を判断**し、ゴール達成まで自律的に動作する
 
-![bg right:40% 90%](https://i.imgur.com/8a1Zc5W.png)
-
 Mastraは、このようなAIエージェントを効率的に開発するためのフレームワークです。
 
 ---
@@ -61,6 +60,7 @@ Mastraは、このようなAIエージェントを効率的に開発するため
 ### Mastraフレームワークの紹介
 
 **TypeScript製のAIエージェント開発フレームワーク**
+URL: https://mastra.ai/
 
 - **特徴**
   - **宣言的な構文**: エージェントの振舞いをシンプルに記述できる
@@ -88,13 +88,15 @@ Web開発者にとって馴染み深いTypeScriptで、パワフルなAIエー�
 
 ### 必要なもの
 
-- **Node.js (v20以上)**
+- **Node.js (v22以上)**
   - ターミナルで `node -v` を実行してバージョンを確認
 - **テキストエディタ**
   - VS Codeを推奨します
-- **OpenAI APIキー**
-  - Platform.openai.com で取得
-  - クレジットカード登録と利用料金にご注意ください
+- **Gemini APIキー**
+  - [Google AI Studio](https://ai.googlei.com/studio) で取得
+    - レートリミットあり
+    - 無料でGemini APIを使える
+    - データは学習されるので、機密情報は避けること
 
 準備がまだの方は、この時間でセットアップをお願いします。
 
@@ -102,28 +104,36 @@ Web開発者にとって馴染み深いTypeScriptで、パワフルなAIエー�
 
 ### 1. プロジェクトの準備
 
-まず、作業用のディレクトリを作成し、`npm`プロジェクトを初期化します。
+作業用のディレクトリを作成し、`npm`プロジェクトを初期化します。
 
-    # 1. 作業ディレクトリを作成
-    mkdir mastra-handson
-    cd mastra-handson
+1. 作業ディレクトリを作成
+
+```bash
+mkdir weather-agent
+cd weather-agent
+```
     
-    # 2. npmプロジェクトを初期化
-    npm init -y
+2. npmプロジェクトを初期化
 
-`package.json`というファイルが作成されればOKです。
+```bash
+npm init -y
+```
+
+`package.json`が作成されればOKです。
 
 ---
 
 ### 2. Mastra と関連ライブラリのインストール
 
-次に、MastraとTypeScript、そしてOpenAIのライブラリをインストールします。
+MastraとTypeScript、Gemini関連のライブラリをインストールします。
 
-    # Mastra と OpenAIライブラリをインストール
-    npm install mastra openai
+```bash
+# Mastra と OpenAIライブラリをインストール
+npm i mastra openai
     
-    # TypeScript関連ライブラリを開発用にインストール
-    npm install -D typescript @types/node ts-node
+# TypeScript関連ライブラリを開発用にインストール
+npm i -D typescript @types/node ts-node mastra
+```
 
 ---
 
