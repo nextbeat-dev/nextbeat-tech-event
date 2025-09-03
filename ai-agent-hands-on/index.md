@@ -459,3 +459,18 @@ Mastraには、今日紹介した機能以外にも高度な機能がありま�
 ---
 
 ご清聴ありがとうございました！
+
+アンケートのお願い：5分程度で終わりますので、ご協力をお願いします。
+
+- アンケートURL: https://forms.gle/N6YAQ8uexWF4hbcE8
+
+![アンケートQRコード](img/qrcode.png)
+
+---
+
+# 懇親会のご案内
+
+MetaLifeにて懇親会を開催します。ぜひご参加ください！
+
+URL: [https://app.metalife.co.jp/spaces/g4T21SGqt0CtxaOJDOw7](https://app.metalife.co.jp/spaces/g4T21SGqt0CtxaOJDOw7)
+
