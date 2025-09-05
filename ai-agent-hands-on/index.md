@@ -445,9 +445,12 @@ Mastraには、今日紹介した機能以外にも高度な機能がありま�
   - `https://mastra.ai/ja/docs`
   - 全ての機能について詳細な解説があります。
 
+- **Mastra サンプル集**
+  - `https://mastra.ai/ja/examples`
+  - さまざまなユースケースのサンプルコードが掲載されています。
+
 - **Mastra GitHubリポジトリ**
   - [https://github.com/mastra-ai/mastra](https://github.com/mastra-ai/mastra)
-  - サンプルコードや最新の動向はこちらで。
 
 - **今日作ったコードを発展させる**
   - 天気情報APIの代わりに検索APIなどに置き換えてみましょう。
@@ -473,4 +476,3 @@ Mastraには、今日紹介した機能以外にも高度な機能がありま�
 MetaLifeにて懇親会を開催します。ぜひご参加ください！
 
 URL: [https://app.metalife.co.jp/spaces/g4T21SGqt0CtxaOJDOw7](https://app.metalife.co.jp/spaces/g4T21SGqt0CtxaOJDOw7)
-
