@@ -299,6 +299,10 @@ export const greetingAgent = new Agent({
 
 ---
 
+## 休憩
+
+---
+
 ## 4. お天気情報エージェント
 
 ---
