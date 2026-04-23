@@ -8,3 +8,7 @@
 - [ゼロから始めるScala体験会 in 大阪](scala-trial-202505/index.md)
   - [イベント資料](scala-trial-202505/index.pdf)
   - [配布資料](scala-trial-202505/shared.pdf)
+- [Claude Codeで作るネイティブコンパイラ in 大阪](cc-native-compiler-osaka-202605/README.md)
+  - [イベント資料（ビルド後）](cc-native-compiler-osaka-202605/slide.pdf)
+  - [配布プロンプト：言語仕様](cc-native-compiler-osaka-202605/prompts/language-spec.md)
+  - [配布プロンプト：バックエンド戦略](cc-native-compiler-osaka-202605/prompts/backend-strategy.md)
