@@ -112,6 +112,7 @@ Web開発者にとって馴染み深いTypeScriptで、パワフルなAIエー�
 
 ```bash
 git clone https://github.com/nextbeat-dev/nextbeat-tech-event.git
+cd nextbeat-dev
 cd ai-agent-hands-on # 今回のイベント用ディレクトリに移動
 ```
 

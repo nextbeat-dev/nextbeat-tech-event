@@ -3,6 +3,8 @@ import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { google } from '@ai-sdk/google';
 import { weatherApiTool } from '../tools/weather-api-tool';
+import { getLuckyColorTool } from '../tools/get-lucky-color-tool';
+import { get } from 'http';
 
 export const weatherAgent = new Agent({
   name: 'weather-assistant',
@@ -13,17 +15,19 @@ export const weatherAgent = new Agent({
   
   ステップ：
   1. まずweatherApiToolを呼び出す
-  2. ツールの結果を基に回答する
-  
+  2. 次にgetLuckyColorToolを呼び出す
+  3. ツールの結果を基に回答する
+
   ツール使用が失敗した場合のみフォールバックデータを使用することを説明する。
   
-  ## 回答フォーマット
-  - 場所名
-  - 現在の気温と体感温度
+  ## 回答フォーマット - 場所名 - 現在の気温と体感温度
   - 湿度と風の状況
   - 天気の状態
   - 今日の服装アドバイス
   - 外出時の注意点（暑さ指数や熱中症警戒レベルなど）
+  - 就寝時の注意点
+  - 明日の天気予報
+  - 今日のラッキーカラー
   
   ## 暑さレベルの判定基準
   - 35°C以上: 危険レベル（外出を控える）
@@ -36,7 +40,7 @@ export const weatherAgent = new Agent({
     apiKey: process.env.GEMINI_API_KEY,
   }),
   tools: {
-    weatherApiTool,
+    weatherApiTool, getLuckyColorTool
   },
   memory: new Memory({
     storage: new LibSQLStore({
