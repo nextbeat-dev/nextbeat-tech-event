@@ -10,7 +10,7 @@
 
 - **実装言語の開発環境**（以下のいずれか）
   - Scala 3（`scala-cli` 推奨）
-  - TypeScript（Node.js 20+, `tsx` など）
+  - TypeScript（[Bun](https://bun.sh/) 1.0+、`bun run main.ts` で直実行）
   - Java（17 以上）
 - Claude Code のアカウントと動作確認済み環境
 - LLVM toolchain（`llc`, `clang` 等）

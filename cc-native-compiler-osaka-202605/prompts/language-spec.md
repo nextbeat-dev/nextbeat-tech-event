@@ -13,7 +13,7 @@
 **実装言語は以下の 3 つからお好きなものを選べます**（サポーターがフォローできる範囲）：
 
 - **Scala 3**（`scala-cli` / `sbt`）
-- **TypeScript**（Node.js 20+, `tsx` など）
+- **TypeScript**（[Bun](https://bun.sh/) 1.0+、`bun run main.ts` で直実行）
 - **Java**（17 以上）
 
 いずれの言語でも「AST を組み立てて LLVM IR を文字列で吐く」という骨子は同じです。
@@ -298,9 +298,9 @@ LLVM IR を文字列として吐き、clang でリンクしてネイティブバ
 まず Phase 1（整数演算 / 変数 / if / while / print）から実装する。
 
 要件：
-- Node.js 20+、tsx で実行
+- Bun 1.0+ で `bun run main.ts <source.nb>` で実行（TypeScript を直接走らせられる）
 - AST は discriminated union ({ kind: "..." } 形式) で表現
-- 外部ライブラリは使わない（Node 標準と組み込み型のみ）
+- 外部ライブラリは使わない（Bun 標準と組み込み型のみ）
 - LLVM IR は配列に push して join("\n") で組み立てる
 - target triple は process.platform で書き分ける
   （darwin → arm64-apple-macosx15.0.0、linux → x86_64-pc-linux-gnu）
