@@ -1,11 +1,18 @@
 //> using scala 3.5
 //> using jvm 21
 
-// nb-lang compiler — skeleton
-// ハンズオン中に Claude Code と一緒に埋めていきます。
+package nblang
 
-@main def main(args: String*): Unit =
+import scala.io.Source
+
+@main def nbLangCompile(args: String*): Unit =
   if args.isEmpty then
-    println("usage: scala-cli run src/main -- <source.nb>")
-  else
-    println(s"TODO: compile ${args.head}")
+    Console.err.println("usage: scala-cli run . -- <source.nb>")
+    sys.exit(1)
+  val src     = Source.fromFile(args.head).mkString
+  val tokens  = Lexer.tokenize(src)
+  val parser  = new Parser(tokens)
+  val program = parser.parseProgram()
+  val codegen = new CodeGen()
+  val ir      = codegen.gen(program)
+  print(ir)
