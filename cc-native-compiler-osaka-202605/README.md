@@ -4,18 +4,172 @@
 - **会場**: 株式会社ネクストビート大阪オフィス
 - **connpass**: （TBD: 告知後にURL追記）
 
-## 事前準備
+## 事前セットアップ
 
-参加者の方は、以下を事前にセットアップしておいてください。
+ハンズオンを 1.5 時間で走り切るため、当日のインストール作業はサポートできません。
+以下のツールを **事前に**揃えて、動作確認まで済ませておいてください。
 
-- **実装言語の開発環境**（以下のいずれか）
-  - Scala 3（`scala-cli` 推奨）
-  - TypeScript（[Bun](https://bun.sh/) 1.0+、`bun run main.ts` で直実行）
-  - Java（17 以上）
-- Claude Code のアカウントと動作確認済み環境
-- LLVM toolchain（`llc`, `clang` 等）
-  - macOS: `brew install llvm`
-  - Linux (WSL2含む): `apt install llvm clang`
+必要なものは大きく 3 つ：
+
+1. **C/C++ ツールチェイン**（`clang`、必要に応じて LLVM ツール一式）
+2. **実装言語の処理系**（Scala 3 / TypeScript (Bun) / Java のうちお好きなもの 1 つ）
+3. **Claude Code**
+
+---
+
+### 1. C/C++ ツールチェイン（全員必須）
+
+LLVM IR / アセンブリを `clang` でリンクしてネイティブバイナリにします。
+
+#### macOS
+
+Apple 純正 clang を使うのが一番ラク。Xcode Command Line Tools を入れれば付いてきます。
+
+```bash
+xcode-select --install   # まだ入ってなければ
+clang --version          # Apple clang 16+ が出れば OK
+```
+
+`llc` / `opt` 等の LLVM 単体ツールも使いたい場合は別途：
+
+```bash
+brew install llvm
+```
+
+ただし**今回のハンズオンは `clang` だけで完結**します（`clang foo.ll -o foo` で IR 直リンク可）。
+
+#### Linux / WSL2 (Ubuntu / Debian 系)
+
+```bash
+sudo apt update
+sudo apt install -y clang llvm
+clang --version          # clang 14+ 推奨
+```
+
+(Fedora / RHEL 系)
+
+```bash
+sudo dnf install -y clang llvm
+```
+
+---
+
+### 2. 実装言語の処理系（いずれか 1 つ）
+
+#### Scala 3（`scala-cli`）
+
+##### macOS
+
+```bash
+brew install Virtuslab/scala-cli/scala-cli
+scala-cli --version
+```
+
+##### Linux / WSL2
+
+```bash
+curl -sSLf https://scala-cli.virtuslab.org/get | sh
+scala-cli --version
+```
+
+初回実行時に JDK と Scala 3 コンパイラを自動取得するので、本番前に
+`scala-cli run cc-native-compiler-osaka-202605/src/scala3 -- cc-native-compiler-osaka-202605/src/examples/sum.nb`
+を一度走らせて依存解決を済ませておくと安心です。
+
+#### TypeScript（[Bun](https://bun.sh/)）
+
+##### macOS
+
+```bash
+brew install oven-sh/bun/bun
+bun --version          # 1.0+ 推奨
+```
+
+##### Linux / WSL2
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+# シェルを開き直すか、表示された通り PATH を通す
+bun --version
+```
+
+#### Java（17 以上）
+
+##### macOS
+
+```bash
+brew install openjdk@21    # or temurin / corretto
+java --version
+```
+
+`brew` だと PATH 通しが必要なことがあります（Caveats を見てください）。
+Adoptium Temurin / Amazon Corretto のインストーラ経由でも OK。
+
+##### Linux / WSL2
+
+```bash
+sudo apt install -y openjdk-21-jdk
+java --version
+```
+
+`java Main.java <args>` の **単一ファイル実行**を使うので、Java 11+ なら動きますが、
+`record` / `sealed interface` を使うため **Java 17 以上**が必要です。
+
+---
+
+### 3. Claude Code
+
+[Claude Code](https://docs.claude.com/en/docs/claude-code/overview) のセットアップが
+済んでいて、ターミナルから対話できる状態にしておいてください。
+
+```bash
+claude --version       # 動作確認
+```
+
+API キー / サブスクリプションのどちらかで認証されていれば OK。
+
+---
+
+### 動作確認チェックリスト
+
+本番前にこれらが全部通ることを確認しておくと安心です。
+
+```bash
+# ツールチェイン
+clang --version
+
+# 実装言語（選んだもの 1 つ）
+scala-cli --version    # Scala 3 を選んだ人
+bun --version          # TypeScript を選んだ人
+java --version         # Java を選んだ人
+
+# Claude Code
+claude --version
+```
+
+そのうえで、リポジトリの `cc-native-compiler-osaka-202605/src/<言語>/` を
+動かして `examples/sum.nb` で `55` が出ることを確認しておくと万全です。
+
+```bash
+# 例：Scala 3
+cd cc-native-compiler-osaka-202605/src/scala3
+scala-cli run . -- ../examples/sum.nb > /tmp/out.ll 2>/dev/null
+clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+
+# 例：TypeScript (Bun)
+cd cc-native-compiler-osaka-202605/src/typescript
+bun run main.ts ../examples/sum.nb > /tmp/out.ll
+clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+
+# 例：Java
+cd cc-native-compiler-osaka-202605/src/java
+java Main.java ../examples/sum.nb > /tmp/out.ll
+clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+```
+
+> **トラブル時：** clang で `Undefined symbols for architecture arm64` が出たら、
+> 入力 IR が空 or ログ混在の可能性大。`scala-cli` の進捗ログが stdout に混ざる
+> ことがあるので `2>/dev/null` で stderr を捨ててください。
 
 ## 当日配布物
 
