@@ -20,30 +20,32 @@
 ### 1. C/C++ ツールチェイン（全員必須）
 
 LLVM IR / アセンブリを `clang` でリンクしてネイティブバイナリにします。
+**clang と LLVM 一式は両方入れてください**（足りないと当日詰まる原因になる、余分に入れても害なし）。
 
 #### macOS
 
-Apple 純正 clang を使うのが一番ラク。Xcode Command Line Tools を入れれば付いてきます。
-
 ```bash
-xcode-select --install   # まだ入ってなければ
-clang --version          # Apple clang 16+ が出れば OK
+xcode-select --install         # Apple 純正 clang を入れる
+brew install llvm              # LLVM ツール一式（llc, opt, llvm-as 等）
+clang --version                # Apple clang 16+
+llc --version 2>&1 | head -1   # LLVM 18+
 ```
 
-`llc` / `opt` 等の LLVM 単体ツールも使いたい場合は別途：
+`brew install llvm` で入る `llc` / `opt` は **PATH に通っていないことがあります**。
+Caveats を確認して `~/.zshrc` などに以下を足しておいてください：
 
 ```bash
-brew install llvm
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"   # Apple Silicon
+# Intel Mac は /usr/local/opt/llvm/bin
 ```
-
-ただし**今回のハンズオンは `clang` だけで完結**します（`clang foo.ll -o foo` で IR 直リンク可）。
 
 #### Linux / WSL2 (Ubuntu / Debian 系)
 
 ```bash
 sudo apt update
 sudo apt install -y clang llvm
-clang --version          # clang 14+ 推奨
+clang --version                # clang 14+ 推奨
+llc --version 2>&1 | head -1
 ```
 
 (Fedora / RHEL 系)
@@ -135,8 +137,9 @@ API キー / サブスクリプションのどちらかで認証されていれ�
 本番前にこれらが全部通ることを確認しておくと安心です。
 
 ```bash
-# ツールチェイン
+# ツールチェイン（両方必須）
 clang --version
+llc --version
 
 # 実装言語（選んだもの 1 つ）
 scala-cli --version    # Scala 3 を選んだ人
