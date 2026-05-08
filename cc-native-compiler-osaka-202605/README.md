@@ -176,8 +176,23 @@ clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
 
 ## 当日配布物
 
-- `prompts/language-spec.md` — 作る言語の仕様プロンプト
-- `prompts/backend-strategy.md` — バックエンド戦略プロンプト
+### 共通（全員）
+
+- `prompts/language-spec.md` — 作る言語の仕様
+- `prompts/backend-strategy.md` — LLVM IR バックエンド戦略
+
+### 言語別プロンプト（自分の使う言語のファイルだけ）
+
+- **Scala 3** → `prompts/prompt-scala3.md`
+- **TypeScript (Bun)** → `prompts/prompt-typescript.md`
+- **Java** → `prompts/prompt-java.md`
+
+各ファイルに **AST 設計例＋初期プロンプト＋詰まった時の対話例**がまとまっています。
+ハンズオン中は `language-spec.md` `backend-strategy.md` ＋ 自分の言語の `prompt-*.md`
+の **3 ファイル**を Claude Code に渡せばOKです。
+
+### スケルトン・サンプル
+
 - `src/scala3/Main.scala` — Scala 3 スケルトン
 - `src/typescript/main.ts` — TypeScript スケルトン
 - `src/java/Main.java` — Java スケルトン
