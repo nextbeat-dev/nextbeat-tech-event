@@ -13,7 +13,7 @@
 
 1. **C/C++ ツールチェイン**（`clang` と LLVM ツール一式の両方）
 2. **実装言語の処理系 + ビルドツール**（Scala 3 + sbt / TypeScript + Bun / Java + Maven のうちお好きなもの 1 つ）
-3. **Claude Code**
+3. **Claude Code または Codex**（どちらでも OK）
 
 ---
 
@@ -137,16 +137,20 @@ mvn --version
 
 ---
 
-### 3. Claude Code
+### 3. Claude Code または Codex
 
-[Claude Code](https://docs.claude.com/en/docs/claude-code/overview) のセットアップが
-済んでいて、ターミナルから対話できる状態にしておいてください。
+エージェント CLI は **Claude Code / Codex のどちらでも OK**です。普段使い慣れている方を、
+ターミナルから対話できる状態にしておいてください。
+
+- [Claude Code](https://docs.claude.com/en/docs/claude-code/overview)
+- [Codex CLI](https://github.com/openai/codex)
 
 ```bash
-claude --version       # 動作確認
+claude --version       # Claude Code を使う人
+codex --version        # Codex を使う人
 ```
 
-API キー / サブスクリプションのどちらかで認証されていれば OK。
+それぞれ API キー / サブスクリプションのどちらかで認証されていれば OK。
 
 ---
 
@@ -165,8 +169,9 @@ bun --version          # TypeScript を選んだ人
 mvn --version          # Java を選んだ人
 java --version         # Scala 3 / Java を選んだ人
 
-# Claude Code
+# Claude Code または Codex（どちらか）
 claude --version
+codex --version
 ```
 
 そのうえで、リポジトリの `cc-native-compiler-osaka-202605/langs/<言語>/` を
@@ -206,7 +211,7 @@ clang examples/sum.ll -o examples/sum.out && ./examples/sum.out   # → 55
 - **TypeScript (Bun)** → `prompts/typescript.md`
 - **Java** → `prompts/java.md`
 
-ハンズオン中は自分の言語の `prompts/<言語>.md` **1 ファイル**だけ Claude Code に渡せば OK。
+ハンズオン中は自分の言語の `prompts/<言語>.md` **1 ファイル**だけ Claude Code / Codex に渡せば OK。
 
 ### リファレンス実装（参考用、3 言語とも標準レイアウト）
 
