@@ -207,9 +207,9 @@ clang examples/sum.ll -o examples/sum.out && ./examples/sum.out   # → 55
 各ファイルは **言語仕様＋バックエンド戦略（LLVM IR）＋AST 設計例＋初期プロンプト＋詰まった時の対話例**
 が全部入りの自己完結ドキュメントです。
 
-- **Scala 3** → `prompts/scala3.md`
-- **TypeScript (Bun)** → `prompts/typescript.md`
-- **Java** → `prompts/java.md`
+- **Scala 3** → [`prompts/scala3.md`](prompts/scala3.md)
+- **TypeScript (Bun)** → [`prompts/typescript.md`](prompts/typescript.md)
+- **Java** → [`prompts/java.md`](prompts/java.md)
 
 ハンズオン中は自分の言語の `prompts/<言語>.md` **1 ファイル**だけ Claude Code / Codex に渡せば OK。
 
