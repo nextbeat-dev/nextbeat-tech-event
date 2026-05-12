@@ -1,0 +1,2 @@
+val xs = [1, 2, "three"];
+print(xs[0]);
