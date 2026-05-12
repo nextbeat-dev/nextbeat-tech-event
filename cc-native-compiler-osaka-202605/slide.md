@@ -66,7 +66,7 @@ mermaid.initialize({
 
 今日のテーマは、一段踏み込んで：
 
-- **Claude Codeを相棒に、小さな言語のネイティブコンパイラを書く**
+- **Claude Code / Codex を相棒に、小さな言語のネイティブコンパイラを書く**
 - 生成された artifacts から実バイナリが生まれ、`./a.out` で動く
 - **エージェント時代のコンパイラ開発の感触**を実地で確かめる
 
@@ -88,7 +88,7 @@ mermaid.initialize({
    - 実装言語は **Scala 3 (sbt) / TypeScript (Bun) / Java (Maven)** からお好きなものを
    - 整数演算 / 変数 / if / while / print
    - 出力：LLVM IR → clang でリンク → 実バイナリ
-2. **Claude Code との協業設計**を体験する
+2. **Claude Code / Codex との協業設計**を体験する
    - 丸投げする部分と、人間が指揮する部分の切り分け
 3. 動くバイナリでなんかする
    - `./a.out` を叩いて結果を見る達成感
@@ -107,38 +107,101 @@ mermaid.initialize({
 
 ---
 
+## ハンズオン開始：リポジトリ準備
+
+まずはリポジトリを clone してください。プロンプトとリファレンス実装が入っています。
+
+```bash
+git clone git@github.com:nextbeat-dev/nextbeat-tech-event.git
+cd nextbeat-tech-event/cc-native-compiler-osaka-202605
+```
+
+ブラウザで中身を確認したい人はこちら：
+**https://github.com/nextbeat-dev/nextbeat-tech-event/tree/main/cc-native-compiler-osaka-202605**
+
+---
+
+## ハンズオン開始：作業ディレクトリの用意
+
+clone したリポジトリは「配布物」。書き換えるのではなく、別場所に作業ディレクトリを切ります：
+
+```bash
+mkdir -p ~/work/nblang && cd ~/work/nblang
+claude    # Claude Code
+# または
+codex     # Codex CLI
+```
+
+エージェント CLI は **Claude Code / Codex のどちらでも OK**。起動したら、
+自分の言語に応じて以下のプロンプトファイルを参照：
+
+| 言語          | 参照するファイル                                                              |
+| ------------- | ----------------------------------------------------------------------------- |
+| Scala 3       | `~/.../cc-native-compiler-osaka-202605/prompts/scala3.md`                     |
+| TypeScript    | `~/.../cc-native-compiler-osaka-202605/prompts/typescript.md`                 |
+| Java          | `~/.../cc-native-compiler-osaka-202605/prompts/java.md`                       |
+
+各ファイルに **言語仕様 + LLVM IR バックエンド戦略 + AST 設計例 + 初期プロンプト + 対話例**
+が全部入りの自己完結プロンプトです。1 ファイルだけ Claude Code / Codex に渡せば OK。
+
+---
+
 ## ハンズオン（前半 30分）
 
 **Step 1: AST と字句・構文解析**
 
-Claude Code に自分の言語の `prompts/<言語>.md`（`prompts/scala3.md` /
-`prompts/typescript.md` / `prompts/java.md`）を渡してスタート。
-各ファイルに **言語仕様＋LLVM IR バックエンド戦略＋初期プロンプト**
-が全部入っています。
+Claude Code もしくは Codex を起動して、自分の言語のプロンプト 1 ファイルを `@` で渡してスタート。
 
-> 以下の仕様の小言語 "nb-lang" のネイティブコンパイラを作ってください。
-> - 整数リテラル / 四則演算 / 変数代入 / if / while / print
-> - 標準レイアウト（pom.xml / build.sbt / package.json）で
-> - (以下略、詳細は配布プロンプト)
+```text
+@~/.../cc-native-compiler-osaka-202605/prompts/scala3.md
+
+このプロンプトに従って、nb-lang のネイティブコンパイラを Phase 1 から作ってください。
+最初のゴールは examples/sum.nb が 55 を出すところまで。
+```
+
+困ったときの参考実装は **`langs/{scala3,typescript,java}/`** 配下にあります
+（前者は配布リポジトリ、ここを覗くのはカンニング OK ということで）。
 
 ---
 
-## ハンズオン（後半 30分）
+## ハンズオン（後半 30分）：言語拡張チャレンジ
 
-**Step 2: LLVM IR コード生成**
+前半で Phase 1〜3 が動いたら、後半は **自分のコンパイラに機能を足す** ターン。
+4 つの拡張プロンプトを `prompts/ext-*.md` に用意しています。
 
-<!-- TODO: コード生成の勘所、Claude Code との詰め方 -->
+| 拡張                  | プロンプト                       | 触る場所                  | 達成感                       |
+| --------------------- | -------------------------------- | ------------------------- | ---------------------------- |
+| `break` / `continue`  | `prompts/ext-break-continue.md`  | Lexer/Parser/AST/CodeGen  | basic block の感触◎          |
+| `&&` / `\|\|` / `!`   | `prompts/ext-logical-ops.md`     | Lexer/Parser/AST/CodeGen  | **短絡評価**を IR で表現     |
+| C 風 `for`            | `prompts/ext-for-loop.md`        | Lexer/Parser (+ CodeGen)  | while への desugar 体験      |
+| `string + string`     | `prompts/ext-string-concat.md`   | TypeCheck/CodeGen         | 外部ランタイム関数の呼び出し |
 
-- SSA 形式の IR を吐く
-- レジスタ割り当ては LLVM 任せ
-- 制御フロー：basic block とラベル
-- `printf` の外部宣言と呼び出し
+好きなのを **1 個選んで**ぶん投げ。複数いけたらボーナス。
+
+---
+
+## 言語拡張チャレンジ：投げ方の例
+
+Claude Code / Codex に **自分の言語の prompt** ＋ **拡張 prompt** を一緒に渡す：
+
+```text
+@~/.../cc-native-compiler-osaka-202605/prompts/scala3.md
+@~/.../cc-native-compiler-osaka-202605/prompts/ext-logical-ops.md
+
+このプロンプトに従って、既存の実装に && / || / ! を短絡評価で追加してください。
+追加後、examples/ext_logical.nb と ext_short_circuit.nb で動作を確認してください。
+```
+
+各 `ext-*.md` には **仕様 / 各層の変更点 / テストプログラム / 期待出力 / プロンプト雛形**
+が全部入っているので、Claude Code / Codex は迷いません。
+
+困ったら参考実装 `langs/<言語>/` を覗いて差分を相談するのも有効。
 
 ---
 
 ## まとめ
 
-- Claude Code で **1 時間あればネイティブコンパイラは書ける**
+- Claude Code / Codex で **1 時間あればネイティブコンパイラは書ける**
 - 肝は「**仕様と戦略を人間が決める、実装は預ける**」
 - 型と ABI の境界で人間の介入が必要になる
 - 今日のコードは各自の GitHub で育ててください
