@@ -4,25 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`cc-native-compiler` は **nb-lang**（整数 / 文字列 / リストを扱う静的型付き手続き型言語）の **ネイティブコンパイラ**を Scala 3 で実装したもの。
+`cc-native-compiler` の **Scala 3 実装**。**nb-lang**（整数 / 文字列 / リストを扱う静的型付き手続き型言語）の **ネイティブコンパイラ**を Scala 3 で書いた。
 .nb ソースを読んで **LLVM IR テキスト (.ll)** を吐き、`clang` でリンクしてネイティブバイナリを生成する。
 
-仕様の原典はリポジトリ外にある以下のファイル。設計判断で迷ったら必ず参照：
+仕様の原典は `../../prompts/scala3.md`。設計判断で迷ったら必ず参照（字句・構文・型システム・例示プログラム・LLVM IR 生成戦略まで全部入り）。
 
-- `~/nextbeat-tech-event/cc-native-compiler-osaka-202605/prompts/language-spec.md` — 字句・構文・型システム・例示プログラム
-- `~/nextbeat-tech-event/cc-native-compiler-osaka-202605/prompts/backend-strategy.md` — LLVM IR の生成戦略、動作検証済みの IR パターン
+Java 版 (`../java/`) と TypeScript 版 (`../typescript/`) と機能・出力 IR は同等。フェーズ構造とテスト期待値も揃えてある。
+
+## ディレクトリ構成（sbt 標準）
+
+```
+langs/scala3/
+├── build.sbt
+├── project/
+│   └── build.properties
+├── src/main/scala/nblang/
+│   ├── Ast.scala
+│   ├── Lexer.scala
+│   ├── Parser.scala
+│   ├── TypeCheck.scala
+│   ├── CodeGen.scala
+│   └── Main.scala
+└── examples/         (.nb サンプルプログラム)
+```
 
 ## ビルド・実行
 
+JDK 21+ と sbt 1.10+ が必要。
+
 ```bash
 # .nb → .ll 生成
-scala-cli run . -- examples/sum.nb            # examples/sum.ll を出力
-scala-cli run . -- examples/foo.nb -o out.ll  # 出力先を指定
+sbt 'run examples/sum.nb'
 
 # .ll → ネイティブバイナリ
 clang examples/sum.ll -o examples/sum.out
 ./examples/sum.out
 ```
+
+sbt 初回起動は重い。対話モード（`sbt` 単体で起動 → `run examples/sum.nb`）で何度も叩く方が快適。
 
 ### 個別サンプルの期待出力
 
@@ -39,16 +58,16 @@ clang examples/sum.ll -o examples/sum.out
 
 ```bash
 for f in sum fact strlist; do
-  scala-cli run . -- examples/$f.nb && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
+  sbt --error "run examples/$f.nb" && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
 done
 for f in bad_typemix bad_reassign bad_listmix; do
-  scala-cli run . -- examples/$f.nb 2>&1 | grep error
+  sbt --error "run examples/$f.nb" 2>&1 | grep error
 done
 ```
 
 ## アーキテクチャ
 
-単一プロジェクト・ルート直下フラットの scala-cli 構成。フェーズはコンパイラの古典的な4段：
+フェーズはコンパイラの古典的な4段：
 
 ```
 .nb source
@@ -96,7 +115,8 @@ done
 
 ## 環境前提
 
-- Scala 3.5 / JVM 21（`project.scala` で固定）
+- Scala 3.5 / JVM 21（`build.sbt` で固定）
+- sbt 1.10+
 - `clang` 必須（macOS デフォルトの Apple clang か Homebrew clang）
 - LLVM 15+ 必須（opaque pointer 対応）
 

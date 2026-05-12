@@ -1,0 +1,3 @@
+target/
+examples/*.ll
+examples/*.out

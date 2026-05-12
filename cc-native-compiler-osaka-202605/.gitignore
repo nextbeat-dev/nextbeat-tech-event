@@ -11,3 +11,23 @@ node_modules/
 .sass-cache
 css/reveal.min.css
 js/reveal.min.js
+
+# nb-lang compiler build outputs / artifacts
+target/
+*.ll
+*.out
+*.class
+a.out
+# Bun / npm
+bun.lock
+bun.lockb
+package-lock.json
+# Scala / sbt
+.bsp/
+.bloop/
+.metals/
+.scala-build/
+project/target/
+project/project/
+# IDE
+.vscode/

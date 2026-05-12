@@ -7,24 +7,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `cc-native-compiler` の **Java 実装**。**nb-lang**（整数 / 文字列 / リストを扱う静的型付き手続き型言語）の **ネイティブコンパイラ**を Java で書いた。
 .nb ソースを読んで **LLVM IR テキスト (.ll)** を吐き、`clang` でリンクしてネイティブバイナリを生成する。
 
-仕様の原典はリポジトリ外にある以下のファイル。設計判断で迷ったら必ず参照：
+仕様の原典は `../../prompts/java.md`。設計判断で迷ったら必ず参照（字句・構文・型システム・例示プログラム・LLVM IR 生成戦略まで全部入り）。
 
-- `~/nextbeat-tech-event/cc-native-compiler-osaka-202605/prompts/java.md` — 字句・構文・型システム・例示プログラム・LLVM IR 生成戦略まで全部入り
+Scala 3 版 (`../scala3/`) と TypeScript 版 (`../typescript/`) と機能・出力 IR は同等。フェーズ構造とテスト期待値も揃えてある。
 
-Scala 3 版 (`../arm64-scala3/`) と機能・出力 IR は同等。フェーズ構造とテスト期待値も揃えてある。
+## ディレクトリ構成（Maven 標準）
+
+```
+langs/java/
+├── pom.xml
+├── src/main/java/nblang/
+│   ├── Ast.java
+│   ├── Lexer.java
+│   ├── Parser.java
+│   ├── TypeCheck.java
+│   ├── CodeGen.java
+│   └── Main.java
+└── examples/         (.nb サンプルプログラム)
+```
 
 ## ビルド・実行
 
-JDK 17+ が必要（`sealed interface`・`record`・switch のパターンマッチを多用）。
+JDK 21+ と Maven 3.9+ が必要（sealed interface の switch パターンマッチを使う）。
 
 ```bash
-# Java ソースをコンパイル
-mkdir -p out
-javac -d out Ast.java Lexer.java Parser.java TypeCheck.java CodeGen.java Main.java
-
 # .nb → .ll 生成
-java -cp out nblang.Main examples/sum.nb            # examples/sum.ll を出力
-java -cp out nblang.Main examples/foo.nb -o out.ll  # 出力先を指定
+mvn -q compile exec:java -Dexec.args="examples/sum.nb"
 
 # .ll → ネイティブバイナリ
 clang examples/sum.ll -o examples/sum.out
@@ -45,17 +53,18 @@ clang examples/sum.ll -o examples/sum.out
 正常系3つ・エラー系3つを一括検証するときは：
 
 ```bash
+mvn -q compile
 for f in sum fact strlist; do
-  java -cp out nblang.Main examples/$f.nb && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
+  mvn -q exec:java -Dexec.args="examples/$f.nb" && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
 done
 for f in bad_typemix bad_reassign bad_listmix; do
-  java -cp out nblang.Main examples/$f.nb 2>&1 | grep error
+  mvn -q exec:java -Dexec.args="examples/$f.nb" 2>&1 | grep error
 done
 ```
 
 ## アーキテクチャ
 
-単一パッケージ `nblang` のフラットなレイアウト。フェーズはコンパイラの古典的な4段：
+フェーズはコンパイラの古典的な4段：
 
 ```
 .nb source
@@ -103,7 +112,8 @@ done
 
 ## 環境前提
 
-- JDK 17+（`sealed interface` / `record` / switch パターンマッチ）。動作確認は OpenJDK 25 で実施。
+- JDK 21+（sealed switch パターンマッチ）。動作確認は OpenJDK 25 で実施。
+- Maven 3.9+
 - `clang` 必須（macOS デフォルトの Apple clang か Homebrew clang）
 - LLVM 15+ 必須（opaque pointer 対応）
 

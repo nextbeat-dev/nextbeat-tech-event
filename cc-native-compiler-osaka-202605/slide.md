@@ -85,7 +85,7 @@ mermaid.initialize({
 ## 今日のゴール
 
 1. **小さな言語 "nb-lang" のネイティブコンパイラ**を書く
-   - 実装言語は **Scala 3 / TypeScript / Java** からお好きなものを
+   - 実装言語は **Scala 3 (sbt) / TypeScript (Bun) / Java (Maven)** からお好きなものを
    - 整数演算 / 変数 / if / while / print
    - 出力：LLVM IR → clang でリンク → 実バイナリ
 2. **Claude Code との協業設計**を体験する
@@ -111,10 +111,14 @@ mermaid.initialize({
 
 **Step 1: AST と字句・構文解析**
 
-Claude Code に渡すプロンプト例（`prompts/language-spec.md` 参照）：
+Claude Code に自分の言語の `prompts/<言語>.md`（`prompts/scala3.md` /
+`prompts/typescript.md` / `prompts/java.md`）を渡してスタート。
+各ファイルに **言語仕様＋LLVM IR バックエンド戦略＋初期プロンプト**
+が全部入っています。
 
-> 以下の仕様の小言語 "nb-lang" の Scala 3 実装を作ってください。
+> 以下の仕様の小言語 "nb-lang" のネイティブコンパイラを作ってください。
 > - 整数リテラル / 四則演算 / 変数代入 / if / while / print
+> - 標準レイアウト（pom.xml / build.sbt / package.json）で
 > - (以下略、詳細は配布プロンプト)
 
 ---

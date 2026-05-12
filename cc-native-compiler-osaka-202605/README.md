@@ -12,7 +12,7 @@
 必要なものは大きく 3 つ：
 
 1. **C/C++ ツールチェイン**（`clang` と LLVM ツール一式の両方）
-2. **実装言語の処理系**（Scala 3 / TypeScript (Bun) / Java のうちお好きなもの 1 つ）
+2. **実装言語の処理系 + ビルドツール**（Scala 3 + sbt / TypeScript + Bun / Java + Maven のうちお好きなもの 1 つ）
 3. **Claude Code**
 
 ---
@@ -56,29 +56,38 @@ sudo dnf install -y clang llvm
 
 ---
 
-### 2. 実装言語の処理系（いずれか 1 つ）
+### 2. 実装言語の処理系 + ビルドツール（いずれか 1 つ）
 
-#### Scala 3（`scala-cli`）
+それぞれ標準的なプロジェクトレイアウト（pom.xml / build.sbt / package.json）を
+使うので、対応するビルドツールも併せて入れてください。
+
+#### Scala 3 + sbt
 
 ##### macOS
 
 ```bash
-brew install Virtuslab/scala-cli/scala-cli
-scala-cli --version
+brew install sbt
+sbt --version            # 1.10+ 推奨
 ```
+
+JDK は sbt が自動で要求するので、`brew install openjdk@21` か Coursier (`cs`) で
+先に JDK 21+ を入れておくのが楽です。
 
 ##### Linux / WSL2
 
 ```bash
-curl -sSLf https://scala-cli.virtuslab.org/get | sh
-scala-cli --version
+# 公式 deb リポジトリ経由が確実
+echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
+curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99e82a75642ac823" | sudo apt-key add
+sudo apt update && sudo apt install -y sbt openjdk-21-jdk
+sbt --version
 ```
 
-初回実行時に JDK と Scala 3 コンパイラを自動取得するので、本番前に
-`scala-cli run cc-native-compiler-osaka-202605/src/scala3 -- cc-native-compiler-osaka-202605/src/examples/sum.nb`
-を一度走らせて依存解決を済ませておくと安心です。
+初回起動時に依存解決で時間がかかります。本番前に
+`cd langs/scala3 && sbt 'run examples/sum.nb'`
+を一度走らせて依存キャッシュを温めておくと安心です。
 
-#### TypeScript（[Bun](https://bun.sh/)）
+#### TypeScript ([Bun](https://bun.sh/))
 
 ##### macOS
 
@@ -95,27 +104,36 @@ curl -fsSL https://bun.sh/install | bash
 bun --version
 ```
 
-#### Java（17 以上）
+プロジェクトは `package.json` + `tsconfig.json` + `src/` の標準レイアウトを使うので、
+本番前に `cd langs/typescript && bun install` で依存（`@types/bun` と `typescript`）を
+事前取得しておいてください。
+
+#### Java + Maven
 
 ##### macOS
 
 ```bash
-brew install openjdk@21    # or temurin / corretto
-java --version
+brew install openjdk@21 maven
+java --version           # 21+
+mvn --version            # 3.9+
 ```
 
 `brew` だと PATH 通しが必要なことがあります（Caveats を見てください）。
-Adoptium Temurin / Amazon Corretto のインストーラ経由でも OK。
+Adoptium Temurin / Amazon Corretto + Maven バイナリ配布でも OK。
 
 ##### Linux / WSL2
 
 ```bash
-sudo apt install -y openjdk-21-jdk
+sudo apt install -y openjdk-21-jdk maven
 java --version
+mvn --version
 ```
 
-`java Main.java <args>` の **単一ファイル実行**を使うので、Java 11+ なら動きますが、
-`record` / `sealed interface` を使うため **Java 17 以上**が必要です。
+`record` / `sealed interface` / sealed switch パターンマッチを使うので
+**Java 21 以上**が必須です。
+
+本番前に `cd langs/java && mvn -q compile` で依存とプラグインを事前取得しておくと
+当日のオフライン環境でも安心です。
 
 ---
 
@@ -141,62 +159,63 @@ API キー / サブスクリプションのどちらかで認証されていれ�
 clang --version
 llc --version
 
-# 実装言語（選んだもの 1 つ）
-scala-cli --version    # Scala 3 を選んだ人
+# 実装言語＋ビルドツール（選んだもの 1 セット）
+sbt --version          # Scala 3 を選んだ人
 bun --version          # TypeScript を選んだ人
-java --version         # Java を選んだ人
+mvn --version          # Java を選んだ人
+java --version         # Scala 3 / Java を選んだ人
 
 # Claude Code
 claude --version
 ```
 
-そのうえで、リポジトリの `cc-native-compiler-osaka-202605/src/<言語>/` を
+そのうえで、リポジトリの `cc-native-compiler-osaka-202605/langs/<言語>/` を
 動かして `examples/sum.nb` で `55` が出ることを確認しておくと万全です。
 
 ```bash
-# 例：Scala 3
-cd cc-native-compiler-osaka-202605/src/scala3
-scala-cli run . -- ../examples/sum.nb > /tmp/out.ll 2>/dev/null
-clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+# 例：Scala 3 (sbt)
+cd cc-native-compiler-osaka-202605/langs/scala3
+sbt 'run examples/sum.nb'
+clang examples/sum.ll -o examples/sum.out && ./examples/sum.out   # → 55
 
 # 例：TypeScript (Bun)
-cd cc-native-compiler-osaka-202605/src/typescript
-bun run main.ts ../examples/sum.nb > /tmp/out.ll
-clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+cd cc-native-compiler-osaka-202605/langs/typescript
+bun install
+bun run src/main.ts examples/sum.nb
+clang examples/sum.ll -o examples/sum.out && ./examples/sum.out   # → 55
 
-# 例：Java
-cd cc-native-compiler-osaka-202605/src/java
-java Main.java ../examples/sum.nb > /tmp/out.ll
-clang /tmp/out.ll -o /tmp/sum && /tmp/sum   # → 55
+# 例：Java (Maven)
+cd cc-native-compiler-osaka-202605/langs/java
+mvn -q compile exec:java -Dexec.args="examples/sum.nb"
+clang examples/sum.ll -o examples/sum.out && ./examples/sum.out   # → 55
 ```
 
 > **トラブル時：** clang で `Undefined symbols for architecture arm64` が出たら、
-> 入力 IR が空 or ログ混在の可能性大。`scala-cli` の進捗ログが stdout に混ざる
-> ことがあるので `2>/dev/null` で stderr を捨ててください。
+> 入力 IR が空 or ログ混在の可能性大。各ビルドツールの進捗ログが stdout に混ざる
+> ことがあるので、各実装は `.ll` をファイルに直書きする設計になっています
+> （`examples/<name>.ll` に書き出される）。
 
 ## 当日配布物
 
-### 共通（全員）
+### 言語別プロンプト（自分の使う言語のファイル 1 つだけ渡せば OK）
 
-- `prompts/language-spec.md` — 作る言語の仕様
-- `prompts/backend-strategy.md` — LLVM IR バックエンド戦略
+各ファイルは **言語仕様＋バックエンド戦略（LLVM IR）＋AST 設計例＋初期プロンプト＋詰まった時の対話例**
+が全部入りの自己完結ドキュメントです。
 
-### 言語別プロンプト（自分の使う言語のファイルだけ）
+- **Scala 3** → `prompts/scala3.md`
+- **TypeScript (Bun)** → `prompts/typescript.md`
+- **Java** → `prompts/java.md`
 
-- **Scala 3** → `prompts/prompt-scala3.md`
-- **TypeScript (Bun)** → `prompts/prompt-typescript.md`
-- **Java** → `prompts/prompt-java.md`
+ハンズオン中は自分の言語の `prompts/<言語>.md` **1 ファイル**だけ Claude Code に渡せば OK。
 
-各ファイルに **AST 設計例＋初期プロンプト＋詰まった時の対話例**がまとまっています。
-ハンズオン中は `language-spec.md` `backend-strategy.md` ＋ 自分の言語の `prompt-*.md`
-の **3 ファイル**を Claude Code に渡せばOKです。
+### リファレンス実装（参考用、3 言語とも標準レイアウト）
 
-### スケルトン・サンプル
+- `langs/scala3/` — Scala 3 + sbt（`build.sbt` + `src/main/scala/nblang/`）
+- `langs/typescript/` — TypeScript + Bun（`package.json` + `tsconfig.json` + `src/`）
+- `langs/java/` — Java + Maven（`pom.xml` + `src/main/java/nblang/`）
 
-- `src/scala3/Main.scala` — Scala 3 スケルトン
-- `src/typescript/main.ts` — TypeScript スケルトン
-- `src/java/Main.java` — Java スケルトン
-- `src/examples/sum.nb` — nb-lang サンプルプログラム
+各ディレクトリの `examples/` に `sum.nb` / `fact.nb` / `strlist.nb` などの
+nb-lang サンプルプログラムが入っています。
 
 ## スライド（PDF）ビルド
 

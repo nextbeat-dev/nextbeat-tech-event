@@ -669,81 +669,157 @@ LLVM IR を経由せず、以下の環境向けのアセンブリを直接吐く
 # TypeScript (Bun) 用 nb-lang コンパイラ実装プロンプト
 
 このファイルは **TypeScript で nb-lang のネイティブコンパイラを実装する**ための
-Claude Code 向けプロンプト集です。実行環境は [Bun](https://bun.sh/) を想定しています。
+Claude Code 向けプロンプト集です。実行環境は [Bun](https://bun.sh/) を想定し、
+標準的な npm パッケージレイアウト（`package.json` + `tsconfig.json` + `src/`）で構成します。
 
-## 使い方
+## ディレクトリレイアウト（npm 標準）
 
-このファイルと一緒に、以下も Claude Code に渡してください（同じディレクトリにあります）：
+```
+nblang/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── ast.ts
+│   ├── lexer.ts
+│   ├── parser.ts
+│   ├── typecheck.ts
+│   ├── codegen.ts
+│   └── main.ts
+└── examples/
+    ├── sum.nb
+    ├── fact.nb
+    └── strlist.nb
+```
 
-- `language-spec.md` — nb-lang の仕様（字句・構文・意味論・例示プログラム）
-- `backend-strategy.md` — LLVM IR 生成戦略・IR パターン・ビルド方法
+- ソースは全部 `src/` 配下。ルート直下に `.ts` を散らかさない。
+- `examples/` はプロジェクトルート直下。実行時に `examples/sum.nb` のような相対パスで参照する。
+- `node_modules/` `dist/` は `.gitignore` 推奨（Bun だけで動かすなら `node_modules/` も発生しない）。
 
-3 つを `@language-spec.md @backend-strategy.md @prompt-typescript.md` のように
-同時に Claude Code へ渡せば、初期プロンプトから一気にブートストラップできます。
+## package.json の最小例
 
----
+```json
+{
+  "name": "nblang",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/main.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.5.0"
+  }
+}
+```
+
+外部ランタイム依存はゼロ（`dependencies` 空）。`@types/bun` は型定義のためだけに使う。
+
+## tsconfig.json の最小例
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": ["src/**/*"]
+}
+```
+
+`allowImportingTsExtensions` + `noEmit` で、`import "./ast.ts"` のように
+拡張子付き import を許可する（Bun での実行に必要）。
+
+## ビルド・実行コマンド
+
+```bash
+# 依存インストール（@types/bun のためだけ）
+bun install
+
+# .nb → .ll 生成
+bun run src/main.ts examples/sum.nb
+# あるいは npm script 経由
+bun start examples/sum.nb
+
+# .ll → ネイティブバイナリ
+clang examples/sum.ll -o examples/sum.out
+./examples/sum.out
+```
 
 ## AST 設計例
 
 ```typescript
-type Expr =
-  | { kind: "IntLit"; value: number }
-  | { kind: "StrLit"; value: string }
-  | { kind: "Var"; name: string }
-  | { kind: "BinOp"; op: string; left: Expr; right: Expr }
-  | { kind: "Call"; name: string; args: Expr[] }
-  | { kind: "Index"; arr: Expr; idx: Expr }
-  | { kind: "ListLit"; elems: Expr[] };
-
-type Stmt =
-  | { kind: "ValDef"; name: string; ty?: Type; init: Expr }
-  | { kind: "VarDef"; name: string; ty?: Type; init: Expr }
-  | { kind: "Reassign"; name: string; value: Expr }
-  | { kind: "If"; cond: Expr; thenBlk: Stmt[]; elseBlk: Stmt[] }
-  | { kind: "While"; cond: Expr; body: Stmt[] }
-  | { kind: "Print"; value: Expr }
-  | { kind: "Return"; value: Expr }
-  | { kind: "ExprStmt"; value: Expr };
-
-type FunDef = {
-  name: string;
-  params: [string, Type][];
-  retType: Type;
-  body: Stmt[];
-};
-
-type Type =
+// src/ast.ts
+export type Type =
   | { kind: "TInt" }
   | { kind: "TString" }
   | { kind: "TList"; elem: Type };
+
+export type Expr =
+  | { kind: "IntLit";  value: bigint }
+  | { kind: "StrLit";  value: string }
+  | { kind: "Var";     name: string }
+  | { kind: "BinOp";   op: string; left: Expr; right: Expr }
+  | { kind: "Neg";     inner: Expr }
+  | { kind: "Call";    name: string; args: Expr[] }
+  | { kind: "Index";   arr: Expr; idx: Expr }
+  | { kind: "ListLit"; elems: Expr[] };
+
+export type Stmt =
+  | { kind: "ValDef";   name: string; declared: Type | null; init: Expr }
+  | { kind: "VarDef";   name: string; declared: Type | null; init: Expr }
+  | { kind: "Reassign"; name: string; value: Expr }
+  | { kind: "If";       cond: Expr; thenBlk: Stmt[]; elseBlk: Stmt[] }
+  | { kind: "While";    cond: Expr; body: Stmt[] }
+  | { kind: "Print";    value: Expr }
+  | { kind: "Return";   value: Expr }
+  | { kind: "ExprStmt"; value: Expr };
+
+export type Param = { name: string; ty: Type };
+export type FunDef = { name: string; params: Param[]; retType: Type; body: Stmt[] };
+export type Program = { funcs: FunDef[]; topStmts: Stmt[] };
 ```
 
----
+整数は `bigint`（64bit 値域を素直に表現できる）。各モジュールから `import type` で参照する。
 
 ## 初期プロンプト（コピペ可）
 
-```text
-TypeScript で、小さな言語 "nb-lang" のネイティブコンパイラを実装したい。
+````text
+TypeScript (Bun) で、小さな言語 "nb-lang" のネイティブコンパイラを実装したい。
 LLVM IR を文字列として吐き、clang でリンクしてネイティブバイナリを作る方針。
 
 まず Phase 1（整数演算 / 変数 / if / while / print）から実装する。
 
 要件：
-- Bun 1.0+ で `bun run main.ts <source.nb>` で直接実行
+- Bun 1.0+、ビルドツール感覚で package.json + tsconfig.json を持つ標準レイアウト
+- 標準レイアウト：
+    nblang/
+      ├── package.json
+      ├── tsconfig.json
+      └── src/
+            ├── ast.ts / lexer.ts / parser.ts
+            ├── typecheck.ts / codegen.ts / main.ts
+  ソースは全部 src/ 配下、ルートにフラットに置かない
 - AST は discriminated union （`{ kind: "..." }` 形式）で表現
-- 外部ライブラリは使わない（Bun 標準と組み込み型のみ、`node:fs` など Node 互換 API は OK）
+- 外部ランタイム依存はゼロ（dependencies 空、devDependencies は @types/bun と typescript のみ）
 - LLVM IR は配列に push して `join("\n")` で組み立てる
 - target triple は process.platform で書き分ける
   （darwin → arm64-apple-macosx15.0.0、linux → x86_64-pc-linux-gnu）
 
 最初のゴール：
-- examples/sum.nb をコンパイルして out.ll を生成、
-  clang out.ll -o a.out && ./a.out で 55 が出ること
+- examples/sum.nb をコンパイルして examples/sum.ll を生成、
+  `bun run src/main.ts examples/sum.nb` が通ること
+- `clang examples/sum.ll -o sum.out && ./sum.out` で 55 が出ること
 
 （language-spec.md の Phase 1 部分と backend-strategy.md の Phase 1 統合例 IR をペースト）
-```
-
----
+````
 
 ## 詰まった時の対話プロンプト集
 
@@ -778,11 +854,23 @@ backend-strategy.md の動作検証済みサンプルと比べて、どこが違
 特定して修正してほしい。
 ```
 
+### tsconfig.json / package.json 周りで詰まった
+
+```text
+bun run src/main.ts が以下で落ちる：
+(エラー出力をペースト)
+
+package.json と tsconfig.json の中身：
+(両方ペースト)
+
+最小構成（依存はdev-only、import に .ts 拡張子を許可、Bun 1.x で動く）に直してほしい。
+```
+
 ### 一気に書きすぎて全体把握できなくなった
 
 ```text
-今のディレクトリ構成と各ファイル（main.ts 内の Lexer / Parser / Ast / CodeGen
-モジュール）の役割を 1 行ずつ要約してほしい。
+今の src/ 配下の各ファイル（main.ts / lexer.ts / parser.ts / ast.ts /
+typecheck.ts / codegen.ts）の役割を 1 行ずつ要約してほしい。
 それから、Phase 1 の最小機能（print(42); だけが動く）に立ち返って、
 そこから動作確認しながら段階的に機能を追加する流れに整理し直したい。
 ```
@@ -809,13 +897,12 @@ backend-strategy.md の「プラン B」の方針で書き直してほしい。
 AST 構造はそのまま、CodeGen 部分だけ差し替えてほしい。
 ```
 
----
+## 補足：Bun + 標準 npm レイアウトの Tips
 
-## 補足：Bun ならではの Tips
-
-- `bun run main.ts` で TypeScript を直接実行（トランスパイル不要）
-- `tsconfig.json` も `package.json` も不要、依存ゼロでスクリプト的に動く
+- `bun run src/main.ts` で TypeScript を直接実行（トランスパイル不要）。`bun start` は package.json の `scripts.start` を実行
 - `node:fs` などの Node 互換 API は Bun でもそのまま使える
+- import に `.ts` 拡張子をつける場合は tsconfig で `"allowImportingTsExtensions": true` + `"noEmit": true`
 - AST は discriminated union (`{ kind: "..." }`) で書くと、`switch (x.kind) { case "..." }` で網羅性チェックが効く
-- 進捗ログが stdout に流れる場合は `console.error()` に逃がす（IR は `process.stdout.write()` のみ）
+- 進捗ログが stdout に流れる場合は `console.error()` に逃がす（IR は `fs.writeFileSync` でファイル直書きが安全）
 - `target triple` は `process.platform` で判定（`"darwin"` か `"linux"` か）
+- 整数は `bigint` で持つと 64bit 値域を素直に表現できる。文字列化は `.toString()`

@@ -669,80 +669,160 @@ LLVM IR を経由せず、以下の環境向けのアセンブリを直接吐く
 - 「ネイティブコンパイラ」感は **プラン B より強い**（実機械語に近い）が、移植性が下がる
 # Java 用 nb-lang コンパイラ実装プロンプト
 
-このファイルは **Java 17+ で nb-lang のネイティブコンパイラを実装する**ための
-Claude Code 向けプロンプト集です。
+このファイルは **Java 21+ で nb-lang のネイティブコンパイラを実装する**ための
+Claude Code 向けプロンプト集です。ビルドツールには **Maven** を使います。
 
-## 使い方
+## ディレクトリレイアウト（Maven 標準）
 
-このファイルと一緒に、以下も Claude Code に渡してください（同じディレクトリにあります）：
+```
+nblang/
+├── pom.xml
+├── src/
+│   └── main/
+│       └── java/
+│           └── nblang/
+│               ├── Ast.java
+│               ├── Lexer.java
+│               ├── Parser.java
+│               ├── TypeCheck.java
+│               ├── CodeGen.java
+│               └── Main.java
+└── examples/
+    ├── sum.nb
+    ├── fact.nb
+    └── strlist.nb
+```
 
-- `language-spec.md` — nb-lang の仕様（字句・構文・意味論・例示プログラム）
-- `backend-strategy.md` — LLVM IR 生成戦略・IR パターン・ビルド方法
+- すべてのソースは `package nblang;` 配下。フラットに `.java` を散らかさない。
+- `examples/` はプロジェクトルート直下。実行時に `examples/sum.nb` のような相対パスで参照する。
+- ビルド成果物は `target/` に出る（`.gitignore` 推奨）。
 
-3 つを `@language-spec.md @backend-strategy.md @prompt-java.md` のように
-同時に Claude Code へ渡せば、初期プロンプトから一気にブートストラップできます。
+## pom.xml の最小例
 
----
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>nblang</groupId>
+    <artifactId>nblang</artifactId>
+    <version>0.1.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <exec.mainClass>nblang.Main</exec.mainClass>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+外部依存ゼロ（`<dependencies>` 無し）。JDK 標準ライブラリだけで完結する想定。
+sealed switch パターンマッチを使うので **source/target は 21** が必須。
+
+## ビルド・実行コマンド
+
+```bash
+# コンパイル
+mvn -q compile
+
+# .nb → .ll 生成（exec-maven-plugin 経由でメインクラスを呼ぶ）
+mvn -q compile exec:java -Dexec.args="examples/sum.nb"
+
+# .ll → ネイティブバイナリ
+clang examples/sum.ll -o examples/sum.out
+./examples/sum.out
+```
 
 ## AST 設計例
 
 ```java
-sealed interface Expr permits IntLit, StrLit, Var, BinOp, Call, Index, ListLit {}
-record IntLit(long value)                              implements Expr {}
-record StrLit(String value)                            implements Expr {}
-record Var(String name)                                implements Expr {}
-record BinOp(String op, Expr left, Expr right)         implements Expr {}
-record Call(String name, java.util.List<Expr> args)    implements Expr {}
-record Index(Expr arr, Expr idx)                       implements Expr {}
-record ListLit(java.util.List<Expr> elems)             implements Expr {}
+package nblang;
 
-sealed interface Stmt permits ValDef, VarDef, Reassign, If, While, Print, Return, ExprStmt {}
-record ValDef(String name, Type ty, Expr init)         implements Stmt {}
-record VarDef(String name, Type ty, Expr init)         implements Stmt {}
-record Reassign(String name, Expr value)               implements Stmt {}
-record If(Expr cond, java.util.List<Stmt> thenBlk,
-          java.util.List<Stmt> elseBlk)                implements Stmt {}
-record While(Expr cond, java.util.List<Stmt> body)     implements Stmt {}
-record Print(Expr value)                               implements Stmt {}
-record Return(Expr value)                              implements Stmt {}
-record ExprStmt(Expr value)                            implements Stmt {}
+import java.util.List;
 
-record FunDef(String name, java.util.List<Param> params,
-              Type retType, java.util.List<Stmt> body) {}
-record Param(String name, Type ty) {}
+public final class Ast {
+    public sealed interface Type permits Type.TInt, Type.TString, Type.TList {
+        record TInt() implements Type {}
+        record TString() implements Type {}
+        record TList(Type elem) implements Type {}
+    }
 
-sealed interface Type permits TInt, TString, TList {}
-record TInt()                  implements Type {}
-record TString()               implements Type {}
-record TList(Type elem)        implements Type {}
+    public sealed interface Expr permits
+            Expr.IntLit, Expr.StrLit, Expr.Var, Expr.BinOp,
+            Expr.Neg, Expr.Call, Expr.Index, Expr.ListLit {
+        record IntLit(long value) implements Expr {}
+        record StrLit(String value) implements Expr {}
+        record Var(String name) implements Expr {}
+        record BinOp(String op, Expr left, Expr right) implements Expr {}
+        record Neg(Expr inner) implements Expr {}
+        record Call(String name, List<Expr> args) implements Expr {}
+        record Index(Expr arr, Expr idx) implements Expr {}
+        record ListLit(List<Expr> elems) implements Expr {}
+    }
+
+    public sealed interface Stmt permits
+            Stmt.ValDef, Stmt.VarDef, Stmt.Reassign, Stmt.IfS,
+            Stmt.WhileS, Stmt.Print, Stmt.Return, Stmt.ExprStmt {
+        record ValDef(String name, Type declared, Expr init) implements Stmt {}
+        record VarDef(String name, Type declared, Expr init) implements Stmt {}
+        record Reassign(String name, Expr value) implements Stmt {}
+        record IfS(Expr cond, List<Stmt> thenBlk, List<Stmt> elseBlk) implements Stmt {}
+        record WhileS(Expr cond, List<Stmt> body) implements Stmt {}
+        record Print(Expr value) implements Stmt {}
+        record Return(Expr value) implements Stmt {}
+        record ExprStmt(Expr value) implements Stmt {}
+    }
+
+    public record Param(String name, Type ty) {}
+    public record FunDef(String name, List<Param> params, Type retType, List<Stmt> body) {}
+    public record Program(List<FunDef> funcs, List<Stmt> topStmts) {}
+}
 ```
 
----
+ネスト sealed interface + record で表現。`Type` `Expr` `Stmt` を別ファイルに分けてもいいが、
+1ファイルに集約しておくと AST 全体が一目で見える。
 
 ## 初期プロンプト（コピペ可）
 
-```text
-Java 17+ で、小さな言語 "nb-lang" のネイティブコンパイラを実装したい。
+````text
+Java 21+ で、小さな言語 "nb-lang" のネイティブコンパイラを実装したい。
 LLVM IR を文字列として吐き、clang でリンクしてネイティブバイナリを作る方針。
 
 まず Phase 1（整数演算 / 変数 / if / while / print）から実装する。
 
 要件：
-- Java 17 以上、`java Main.java <args>` の単一ファイル実行を想定
-  （複数ファイル分けるなら javac でビルドしてもよい）
+- Java 17 以上、ビルドは Maven（pom.xml）
+- 標準レイアウト：
+    nblang/
+      ├── pom.xml
+      └── src/main/java/nblang/
+            ├── Ast.java / Lexer.java / Parser.java
+            ├── TypeCheck.java / CodeGen.java / Main.java
+  ソースは全部 `package nblang;` 配下、フラットに置かない
 - AST は sealed interface + record で表現（パターンマッチで分岐できる）
-- 外部ライブラリは使わない（JDK 標準のみ）
+- 外部ライブラリは使わない（JDK 標準のみ、依存は <dependencies> 空）
 - LLVM IR は StringBuilder で組み立てる
 - target triple は System.getProperty("os.name") で書き分ける
+  （macOS → arm64-apple-macosx15.0.0、それ以外 → x86_64-pc-linux-gnu）
 
 最初のゴール：
-- examples/sum.nb をコンパイルして out.ll を生成、
-  clang out.ll -o a.out && ./a.out で 55 が出ること
+- examples/sum.nb をコンパイルして examples/sum.ll を生成、
+  `mvn -q compile exec:java -Dexec.args="examples/sum.nb"` が通ること
+- `clang examples/sum.ll -o sum.out && ./sum.out` で 55 が出ること
 
 （language-spec.md の Phase 1 部分と backend-strategy.md の Phase 1 統合例 IR をペースト）
-```
-
----
+````
 
 ## 詰まった時の対話プロンプト集
 
@@ -777,11 +857,23 @@ backend-strategy.md の動作検証済みサンプルと比べて、どこが違
 特定して修正してほしい。
 ```
 
+### Maven のビルド設定で詰まった
+
+```text
+mvn compile が以下で落ちる：
+(エラー出力をペースト)
+
+pom.xml の中身：
+(pom.xml の中身をペースト)
+
+最小構成（exec-maven-plugin 入り、依存ゼロ、JDK 17 target）に直してほしい。
+```
+
 ### 一気に書きすぎて全体把握できなくなった
 
 ```text
-今のディレクトリ構成と各クラス（Main / Lexer / Parser / AST records /
-CodeGen）の役割を 1 行ずつ要約してほしい。
+今の src/main/java/nblang/ 配下の各クラス（Main / Lexer / Parser /
+Ast / TypeCheck / CodeGen）の役割を 1 行ずつ要約してほしい。
 それから、Phase 1 の最小機能（print(42); だけが動く）に立ち返って、
 そこから動作確認しながら段階的に機能を追加する流れに整理し直したい。
 ```
@@ -808,14 +900,12 @@ backend-strategy.md の「プラン B」の方針で書き直してほしい。
 AST 構造はそのまま、CodeGen クラスだけ差し替えてほしい。
 ```
 
----
+## 補足：Java 21+ ならではの Tips
 
-## 補足：Java 17+ ならではの Tips
-
-- `java Main.java <args>` で単一 `.java` ファイル直接実行（Java 11+）
 - `record` で簡潔にデータ型、`sealed interface` で sum type
 - `instanceof` パターン（`if (e instanceof IntLit i)`）で型ガード
 - Java 21+ なら switch 式の sealed パターンマッチが本格的に使える（21 未満なら if/else）
-- AST records は同一 `.java` ファイル内に定義可能（public class は 1 つだけ）
+- AST 関連の record は `Ast.java` 1 ファイルに集約してもよい（ネスト sealed interface + record）
 - `target triple` は `System.getProperty("os.name").toLowerCase().contains("mac")` で判定
 - `Files.readString(Path.of(args[0]))` でソースファイル読み込み
+- `mvn -q` で出力を絞れる。`-Dexec.args="..."` で main メソッドへ引数渡し
