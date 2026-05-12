@@ -7,24 +7,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `cc-native-compiler` の **TypeScript (Bun) 実装**。**nb-lang**（整数 / 文字列 / リストを扱う静的型付き手続き型言語）の **ネイティブコンパイラ**を Bun で動く TypeScript で書いた。
 .nb ソースを読んで **LLVM IR テキスト (.ll)** を吐き、`clang` でリンクしてネイティブバイナリを生成する。
 
-仕様の原典はリポジトリ外にある以下のファイル。設計判断で迷ったら必ず参照：
+仕様の原典は `../../prompts/typescript.md`。設計判断で迷ったら必ず参照（字句・構文・型システム・例示プログラム・LLVM IR 生成戦略まで全部入り）。
 
-- `~/nextbeat-tech-event/cc-native-compiler-osaka-202605/prompts/typescript.md` — 字句・構文・型システム・例示プログラム・LLVM IR 生成戦略まで全部入り
+Java 版 (`../java/`) と Scala 3 版 (`../scala3/`) と機能・出力 IR は同等。フェーズ構造とテスト期待値も揃えてある。
 
-Scala 3 版 (`../arm64-scala3/`) と Java 版 (`../arm64-java/`) と機能・出力 IR は同等。フェーズ構造とテスト期待値も揃えてある。
+## ディレクトリ構成（npm 標準）
+
+```
+langs/typescript/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── ast.ts
+│   ├── lexer.ts
+│   ├── parser.ts
+│   ├── typecheck.ts
+│   ├── codegen.ts
+│   └── main.ts
+└── examples/         (.nb サンプルプログラム)
+```
 
 ## ビルド・実行
 
-[Bun](https://bun.sh/) 1.0+ が必要（TypeScript を直接実行できる）。トランスパイル不要、`tsconfig.json` も `package.json` も不要。
+[Bun](https://bun.sh/) 1.0+ が必要（TypeScript を直接実行できる）。
 
 ```bash
-# .nb → .ll 生成（コンパイル工程は不要、bun が直接 .ts を実行）
-bun run main.ts examples/sum.nb            # examples/sum.ll を出力
-bun run main.ts examples/foo.nb -o out.ll  # 出力先を指定
+# 依存インストール（@types/bun + typescript を devDependencies に置いてある）
+bun install
+
+# .nb → .ll 生成
+bun run src/main.ts examples/sum.nb
+# あるいは npm script 経由
+bun start examples/sum.nb
 
 # .ll → ネイティブバイナリ
 clang examples/sum.ll -o examples/sum.out
 ./examples/sum.out
+
+# 型チェック（tsc は noEmit）
+npx tsc --noEmit
 ```
 
 ### 個別サンプルの期待出力
@@ -42,34 +63,34 @@ clang examples/sum.ll -o examples/sum.out
 
 ```bash
 for f in sum fact strlist; do
-  bun run main.ts examples/$f.nb && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
+  bun run src/main.ts examples/$f.nb && clang examples/$f.ll -o examples/$f.out && ./examples/$f.out
 done
 for f in bad_typemix bad_reassign bad_listmix; do
-  bun run main.ts examples/$f.nb 2>&1 | grep error
+  bun run src/main.ts examples/$f.nb 2>&1 | grep error
 done
 ```
 
 ## アーキテクチャ
 
-フラットな TS モジュール構成。フェーズはコンパイラの古典的な4段：
+フェーズはコンパイラの古典的な4段：
 
 ```
 .nb source
-  └─> tokenize    (lexer.ts)
-       └─> parse  (parser.ts)
-            └─> check  (typecheck.ts)
-                 └─> generate  (codegen.ts)
+  └─> tokenize    (src/lexer.ts)
+       └─> parse  (src/parser.ts)
+            └─> check  (src/typecheck.ts)
+                 └─> generate  (src/codegen.ts)
                       └─> .ll (LLVM IR)
                            └─> clang → ネイティブバイナリ
 ```
 
 各ファイルの責務：
 
-- **ast.ts** — `Type` / `Expr` / `Stmt` を discriminated union (`{ kind: "..." }`) で表現。`FunDef` / `Program` / `Param` も plain object 型。switch 文の `kind` 分岐で網羅性チェックが効くため、`case` の追加・削除は `tsc` がコンパイル時に検出する。
-- **lexer.ts** — 手書きステートマシン。キーワード集合は `KEYWORDS`。`<` と `>` は演算子トークンとして出し、型 `list<T>` の文脈は Parser 側で判別する。`Token` も discriminated union。整数は `bigint` で持つ（64bit 値域を素直に表現）。
-- **parser.ts** — 再帰下降。優先順位は `comparison → additive → multiplicative → unary → postfix → primary`。`postfix` で関数呼び出し `()` とインデックス `[]` を処理。`function` キーワードのトップレベル登場でのみ関数定義に分岐する。
-- **typecheck.ts** — 環境ベースの単純型検査。`val` / `var` の可変性、関数シグネチャ照合、リスト要素型の一致、比較式の結果は `int` 扱い（LLVM 側では `i64` に zext）。`TypeError` クラス名は組み込みと衝突するので import 時に `as NbTypeError` で別名化する。
-- **codegen.ts** — LLVM IR を `string[]` に push → 最後に `join("\n")` で組み立てる。3 つのバッファを保持：`globalDecls`（文字列リテラル）／`funcDefs`（関数定義）／`mainBuf`（トップレベル → main 関数）。
+- **src/ast.ts** — `Type` / `Expr` / `Stmt` を discriminated union (`{ kind: "..." }`) で表現。`FunDef` / `Program` / `Param` も plain object 型。switch 文の `kind` 分岐で網羅性チェックが効くため、`case` の追加・削除は `tsc` がコンパイル時に検出する。
+- **src/lexer.ts** — 手書きステートマシン。キーワード集合は `KEYWORDS`。`<` と `>` は演算子トークンとして出し、型 `list<T>` の文脈は Parser 側で判別する。`Token` も discriminated union。整数は `bigint` で持つ（64bit 値域を素直に表現）。
+- **src/parser.ts** — 再帰下降。優先順位は `comparison → additive → multiplicative → unary → postfix → primary`。`postfix` で関数呼び出し `()` とインデックス `[]` を処理。`function` キーワードのトップレベル登場でのみ関数定義に分岐する。
+- **src/typecheck.ts** — 環境ベースの単純型検査。`val` / `var` の可変性、関数シグネチャ照合、リスト要素型の一致、比較式の結果は `int` 扱い（LLVM 側では `i64` に zext）。`TypeError` クラス名は組み込みと衝突するので import 時に `as NbTypeError` で別名化する。
+- **src/codegen.ts** — LLVM IR を `string[]` に push → 最後に `join("\n")` で組み立てる。3 つのバッファを保持：`globalDecls`（文字列リテラル）／`funcDefs`（関数定義）／`mainBuf`（トップレベル → main 関数）。
 
 ### CodeGen の重要な不変条件
 
@@ -100,9 +121,10 @@ done
 ## 環境前提
 
 - Bun 1.0+（TypeScript 直接実行）。動作確認は Bun 1.3 で実施。
+- Node.js は不要（`npx tsc` だけ Node 系。Bun 同梱の `bun pm` でも代替可）
 - `clang` 必須（macOS デフォルトの Apple clang か Homebrew clang）
 - LLVM 15+ 必須（opaque pointer 対応）
 
 Linux / WSL2 では `target triple` が自動で `x86_64-pc-linux-gnu` に切り替わるが、リンクで `-no-pie` や `-fuse-ld=lld` が必要になる distro がある（その場合はビルドコマンド側で対応する）。
 
-Bun の代わりに `tsc` + `node` や Deno でも動く想定だが、import に `.ts` 拡張子を明示的に付けているので拡張子を解決する設定が必要。
+Bun の代わりに `tsc` + `node` や Deno でも動かす場合、import に `.ts` 拡張子を明示的に付けているので拡張子解決の設定が必要（tsconfig の `allowImportingTsExtensions`）。

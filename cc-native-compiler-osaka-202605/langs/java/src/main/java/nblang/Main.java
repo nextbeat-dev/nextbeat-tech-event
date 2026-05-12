@@ -10,7 +10,7 @@ import nblang.Lexer.TokenWithPos;
 public final class Main {
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-            System.err.println("Usage: java -cp out nblang.Main <input.nb> [-o <output.ll>]");
+            System.err.println("Usage: mvn -q compile exec:java -Dexec.args=\"<input.nb> [-o <output.ll>]\"");
             System.exit(1);
         }
 

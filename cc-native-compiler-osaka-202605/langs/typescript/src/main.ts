@@ -8,7 +8,7 @@ import { generate } from "./codegen.ts";
 function main(): void {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    console.error("Usage: bun run main.ts <input.nb> [-o <output.ll>]");
+    console.error("Usage: bun run src/main.ts <input.nb> [-o <output.ll>]");
     process.exit(1);
   }
 
