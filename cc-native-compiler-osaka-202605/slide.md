@@ -62,7 +62,7 @@ mermaid.initialize({
 
 ## イントロ：Claude Code × ネイティブコンパイラ
 
-「Claude Codeでインタプリタは作れるらしい」——そろそろ聞き飽きた頃ではないでしょうか。
+「Claude Codeで色々なソフトウェアを作れる」——聞き飽きた頃ではないでしょうか。
 
 今日のテーマは、一段踏み込んで：
 
@@ -92,6 +92,7 @@ mermaid.initialize({
    - 丸投げする部分と、人間が指揮する部分の切り分け
 3. 動くバイナリでなんかする
    - `./a.out` を叩いて結果を見る達成感
+4. （Optional）言語拡張チャレンジ
 
 ---
 
@@ -132,7 +133,10 @@ claude    # Claude Code
 codex     # Codex CLI
 ```
 
-エージェント CLI は **Claude Code / Codex のどちらでも OK**。起動したら、
+エージェント CLI は **Claude Code / Codex のどちらでも OK**。起動したら、次ページへ：
+
+## プロンプトファイルの参照
+
 自分の言語に応じて以下のプロンプトファイルを参照：
 
 | 言語          | 参照するファイル                                                              |
@@ -141,8 +145,7 @@ codex     # Codex CLI
 | TypeScript    | `~/.../cc-native-compiler-osaka-202605/prompts/typescript.md`                 |
 | Java          | `~/.../cc-native-compiler-osaka-202605/prompts/java.md`                       |
 
-各ファイルに **言語仕様 + LLVM IR バックエンド戦略 + AST 設計例 + 初期プロンプト + 対話例**
-が全部入りの自己完結プロンプトです。1 ファイルだけ Claude Code / Codex に渡せば OK。
+各ファイルに **言語仕様 + LLVM IR バックエンド戦略 + AST 設計例 + 初期プロンプト + 対話例**が全部入りの自己完結プロンプトです。1 ファイルだけ Claude Code / Codex に渡せば OK。
 
 ---
 
