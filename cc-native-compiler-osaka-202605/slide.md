@@ -216,3 +216,9 @@ Claude Code / Codex に **自分の言語の prompt** ＋ **拡張 prompt** を�
 ご清聴ありがとうございました。
 
 質問・感想・実装の疑問、お気軽にどうぞ。
+
+アンケート回答にご協力いただけると助かります：
+
+URL: https://forms.gle/KLj8DYRXRUbNBsdWA
+
+![QRコード](img/qrcode.png)
