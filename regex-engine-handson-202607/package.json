@@ -1,0 +1,23 @@
+{
+  "name": "regex-engine-handson",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Brzozowski微分でつくる、ReDoSしない実用正規表現エンジン（Nextbeat Build Night Osaka #1 教材）",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cli": "tsx src/cli.ts",
+    "bench:redos": "tsx bench/redos.ts",
+    "bench:linear": "tsx bench/linear.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
