@@ -1,10 +1,12 @@
 /**
  * Brzozowski微分の中核。たった2つの再帰関数（nullable と derivative）だけ。
  * この30行が正規表現エンジンの心臓部。
+ *
+ * ★山場①: この2つの switch の中身を埋める。SPEC.md の規則表と1対1★
  */
 
-import { type Re, EMPTY, EPS } from "./ast.js";
-import { mkAlt, mkConcat } from "./normalize.js";
+import { type Re, EMPTY, EPS } from "./ast.js"; // ①で使う（今は未使用でOK）
+import { mkAlt, mkConcat } from "./normalize.js"; // ①で使う（今は未使用でOK）
 
 /**
  * nullable(r): r は空文字列 "" を受理するか？
@@ -13,18 +15,12 @@ import { mkAlt, mkConcat } from "./normalize.js";
  */
 export function nullable(r: Re): boolean {
   switch (r.tag) {
-    case "Empty":
-      return false;
-    case "Eps":
-      return true;
-    case "Class":
-      return false; // どんな1文字集合も「1文字」消費するので "" は受理しない
-    case "Star":
-      return true; // r* は0回マッチ（=ε）を含む
-    case "Concat":
-      return nullable(r.left) && nullable(r.right);
-    case "Alt":
-      return nullable(r.left) || nullable(r.right);
+    // TODO(山場①): SPEC.md「nullable ν(r)」の表の6行を case で実装する
+    //   case "Empty": / "Eps": / "Class": / "Star": / "Concat": / "Alt":
+    default:
+      throw new Error(
+        `TODO(山場①): nullable(${r.tag}) — SPEC.md の ν(r) の表を見て実装してください`,
+      );
   }
 }
 
@@ -43,27 +39,18 @@ export function nullable(r: Re): boolean {
  */
 export function derivative(r: Re, c: number): Re {
   switch (r.tag) {
-    case "Empty":
-      return EMPTY;
-    case "Eps":
-      return EMPTY;
-    case "Class":
-      return classMatches(r.set, r.neg, c) ? EPS : EMPTY;
-    case "Star":
-      // (∂c body) · (body*)  ※ body* は r 自身を再利用
-      return mkConcat(derivative(r.body, c), r);
-    case "Concat": {
-      const dLeft = mkConcat(derivative(r.left, c), r.right); // ∂c(r)·s
-      return nullable(r.left)
-        ? mkAlt(dLeft, derivative(r.right, c)) // + ∂c(s)
-        : dLeft;
-    }
-    case "Alt":
-      return mkAlt(derivative(r.left, c), derivative(r.right, c));
+    // TODO(山場①): SPEC.md「derivative ∂c(r)」の表の6行を case で実装する
+    //  - ノード生成は必ず mkAlt / mkConcat 経由（生のオブジェクトリテラル禁止）
+    //  - Class では classMatches(r.set, r.neg, c) を使う
+    //  - ★連接則の ν(r) 項を忘れると a?b だけ壊れる（SPEC.md の罠）
+    default:
+      throw new Error(
+        `TODO(山場①): derivative(${r.tag}, '${String.fromCodePoint(c)}') — SPEC.md の ∂c(r) の表を見て実装してください`,
+      );
   }
 }
 
-/** 文字 c（コードポイント）が文字集合に属するか。neg なら否定。 */
+/** 文字 c（コードポイント）が文字集合に属するか。neg なら否定。（完成品・①の対象外） */
 export function classMatches(
   set: readonly (readonly [number, number])[],
   neg: boolean,

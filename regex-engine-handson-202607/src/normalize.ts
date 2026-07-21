@@ -6,60 +6,37 @@
  * 素朴に作ると ε·r や r|r のような「意味は同じだが構造が違う」ノードが無限に増殖し、
  * 遅延DFAの状態が収束せず、線形時間が崩壊する（(a+)+ で状態数が指数爆発する）。
  *
- * これを防ぐのが ACI（結合則 Associativity / 可換則 Commutativity / 冪等則 Idempotence）
- * を中心とした最小限の正規化。生のオブジェクトリテラルでノードを作らず、必ずこの
- * mkAlt / mkConcat / mkStar を経由させることで、相異なる微分（=状態）を有限個に抑える。
+ * いまは「素直にノードを作るだけ」の naive 版。正しく動くが、状態が入力長に比例して
+ * 増え続ける。山場①のあと pnpm bench:redos 16 で爆発を確認し、②で SPEC.md の
+ * ACI（結合/可換/冪等）正規化をここに実装して直す。
  */
 
-import { type Re, EMPTY, EPS, canonicalKey } from "./ast.js";
-
-/** Alt をフラット化して項の配列にする（(a|b)|c も a|(b|c) も [a,b,c]）。 */
-function altParts(r: Re): Re[] {
-  return r.tag === "Alt" ? [...altParts(r.left), ...altParts(r.right)] : [r];
-}
+import { type Re, EMPTY, EPS, canonicalKey } from "./ast.js"; // ②で使う（今は未使用でOK）
 
 /**
- * 選択 r | s。正規化規則:
- *  - ∅|r = r, r|∅ = r        （∅ は選択の吸収単位）
- *  - r|r = r                 （冪等）
- *  - r|s = s|r               （可換 → canonicalKey でソートして順序固定）
- *  - (r|s)|t = r|(s|t)        （結合 → フラット化して一意な右畳み）
+ * 選択 r | s。
+ * TODO(②): SPEC.md「正規化（ACI）」の mkAlt 規則を実装する
+ *  - ∅|r = r, r|∅ = r（吸収）
+ *  - r|r = r（冪等）
+ *  - r|s = s|r（可換 → canonicalKey でソートして順序固定）
+ *  - (r|s)|t = r|(s|t)（結合 → フラット化して一意な右畳み）
  */
 export function mkAlt(a: Re, b: Re): Re {
-  const byKey = new Map<string, Re>();
-  for (const part of [...altParts(a), ...altParts(b)]) {
-    if (part.tag === "Empty") continue; // ∅ を選択肢から除去
-    byKey.set(canonicalKey(part), part); // 同一キーは1つに（冪等）
-  }
-  const parts = [...byKey.values()].sort((x, y) =>
-    canonicalKey(x) < canonicalKey(y) ? -1 : 1,
-  );
-  if (parts.length === 0) return EMPTY;
-  // 右畳みで一意な構造に固定（reduce は左から畳むが、順序が固定なので決定的）
-  return parts.reduce((acc, x) => ({ tag: "Alt", left: acc, right: x }));
+  return { tag: "Alt", left: a, right: b }; // naive: そのまま作る
 }
 
 /**
- * 連接 r · s。正規化規則:
- *  - ∅·r = ∅, r·∅ = ∅        （∅ は連接の零元）
- *  - ε·r = r, r·ε = r        （ε は連接の単位元）
- *  - (r·s)·t = r·(s·t)        （結合 → 右結合に固定）
+ * 連接 r · s。
+ * TODO(②): ∅·r = ∅, r·∅ = ∅（零元）/ ε·r = r, r·ε = r（単位元）/ 右結合に固定
  */
 export function mkConcat(a: Re, b: Re): Re {
-  if (a.tag === "Empty" || b.tag === "Empty") return EMPTY;
-  if (a.tag === "Eps") return b;
-  if (b.tag === "Eps") return a;
-  if (a.tag === "Concat") return mkConcat(a.left, mkConcat(a.right, b)); // 右結合へ
-  return { tag: "Concat", left: a, right: b };
+  return { tag: "Concat", left: a, right: b }; // naive: そのまま作る
 }
 
 /**
- * 星 r*。正規化規則:
- *  - ∅* = ε, ε* = ε
- *  - (r*)* = r*
+ * 星 r*。
+ * TODO(②): ∅* = ε, ε* = ε / (r*)* = r*
  */
 export function mkStar(r: Re): Re {
-  if (r.tag === "Empty" || r.tag === "Eps") return EPS;
-  if (r.tag === "Star") return r;
-  return { tag: "Star", body: r };
+  return { tag: "Star", body: r }; // naive: そのまま作る
 }
