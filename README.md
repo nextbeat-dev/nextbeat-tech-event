@@ -12,3 +12,5 @@
   - [イベント資料（ビルド後）](cc-native-compiler-osaka-202605/slide.pdf)
   - [配布プロンプト：言語仕様](cc-native-compiler-osaka-202605/prompts/language-spec.md)
   - [配布プロンプト：バックエンド戦略](cc-native-compiler-osaka-202605/prompts/backend-strategy.md)
+- [Nextbeat Osaka Lab #1 — Claude Codeで作る、正規表現エンジン](regex-engine-handson-202607/README.md)
+  - ReDoSしない実用正規表現エンジンをBrzozowski微分でTypeScript実装するハンズオン教材（2026-07-23開催）
