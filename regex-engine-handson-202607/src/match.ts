@@ -6,7 +6,7 @@
  * 「微分結果をメモ化したら、勝手にDFAになっていた」——これが本ハンズオンの山場の驚き。
  */
 
-import { type Re, canonicalKey } from "./ast.js";
+import { type Re, canonicalKey, charClass } from "./ast.js";
 import { nullable, derivative } from "./derivative.js";
 import { mkStar, mkConcat } from "./normalize.js";
 
@@ -76,8 +76,8 @@ export class LazyDfa {
  * DFAなので .* が増えてもReDoSしない（バックトラック型はここが指数爆発の温床）。
  */
 export function toSearch(re: Re): Re {
-  // .* = 任意文字（改行含む全コードポイント）の星
-  const anyChar: Re = { tag: "Class", set: [[0, 0x10ffff]], neg: false };
+  // 任意文字（改行含む全コードポイント）の星。ノード生成は必ず charClass 経由で行う。
+  const anyChar = charClass([[0, 0x10ffff]], false);
   const star = mkStar(anyChar);
   return mkConcat(star, mkConcat(re, star)); // .* re .*
 }

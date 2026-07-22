@@ -94,12 +94,12 @@ describe("組み合わせ", () => {
   });
 });
 
-describe("ReDoS入力でも正しく・固まらない", () => {
-  it("(a+)+ は線形時間で正しく判定", () => {
+describe("ReDoSパターンでも正しく判定（小入力）", () => {
+  // 大入力での線形性・状態数の収束は tests/linear.test.ts（②の完了判定）が検証する。
+  // ここでは①（derivative の実装）だけで判定できる意味論の正しさを見る。
+  it("(a+)+", () => {
     expect(m("(a+)+", "aaaa")).toBe(true);
     expect(m("(a+)+", "aaaab")).toBe(false);
-    // 攻撃入力でもハングしない（タイムアウトしなければ線形性の証拠）
-    expect(m("(a+)+", "a".repeat(100000) + "b")).toBe(false);
   });
 });
 
@@ -113,5 +113,69 @@ describe("部分一致 search", () => {
 describe("サロゲートペア（絵文字）安全", () => {
   it("絵文字1文字を . で受理", () => {
     expect(m(".", "😀")).toBe(true); // コードポイント単位なので1文字扱い
+  });
+});
+
+describe("量化子 {n,m}", () => {
+  it("a{2,3}", () => {
+    expect(m("a{2,3}", "a")).toBe(false);
+    expect(m("a{2,3}", "aa")).toBe(true);
+    expect(m("a{2,3}", "aaa")).toBe(true);
+    expect(m("a{2,3}", "aaaa")).toBe(false);
+  });
+  it("a{2}（ちょうど2回）", () => {
+    expect(m("a{2}", "a")).toBe(false);
+    expect(m("a{2}", "aa")).toBe(true);
+    expect(m("a{2}", "aaa")).toBe(false);
+  });
+  it("a{2,}（2回以上）", () => {
+    expect(m("a{2,}", "a")).toBe(false);
+    expect(m("a{2,}", "aa")).toBe(true);
+    expect(m("a{2,}", "aaaaa")).toBe(true);
+  });
+  it("持参正規表現の定番: 日付形式", () => {
+    expect(m("\\d{4}-\\d{2}-\\d{2}", "2026-07-23")).toBe(true);
+    expect(m("\\d{4}-\\d{2}-\\d{2}", "2026-7-23")).toBe(false);
+  });
+});
+
+describe("非貪欲量化子 *? +? ?? （DFAでは言語が変わらない）", () => {
+  it("a+? は a+ と同じ言語（空文字列は受理しない）", () => {
+    expect(m("a+?", "")).toBe(false);
+    expect(m("a+?", "a")).toBe(true);
+    expect(m("a+?", "aaa")).toBe(true);
+  });
+  it("a*? は a* と同じ言語", () => {
+    expect(m("a*?", "")).toBe(true);
+    expect(m("a*?", "aa")).toBe(true);
+  });
+  it("a?? は a? と同じ言語", () => {
+    expect(m("a??", "")).toBe(true);
+    expect(m("a??", "a")).toBe(true);
+  });
+});
+
+describe("未対応構文は SyntaxError になる（黙って誤動作しない）", () => {
+  // 「エラーが出ないのにマッチしない」が一番デバッグ時間を溶かすため、
+  // 持参正規表現で遭遇しがちな構文は全て親切なエラーに倒す。
+  it("^ と $ はエラー（test は元々全体一致なので不要）", () => {
+    expect(() => compile("^abc")).toThrow(SyntaxError);
+    expect(() => compile("abc$")).toThrow(SyntaxError);
+  });
+  it("量化子でない裸の { } はエラー", () => {
+    expect(() => compile("{2}")).toThrow(SyntaxError);
+    expect(() => compile("a{")).toThrow(SyntaxError);
+    expect(() => compile("a{x}")).toThrow(SyntaxError);
+  });
+  it("未知のエスケープ（\\b など）はエラー", () => {
+    expect(() => compile("\\b")).toThrow(SyntaxError);
+    expect(() => compile("\\D")).toThrow(SyntaxError);
+  });
+  it("後方参照 \\1 はエラー（設計上あえて非対応。SPEC.md 末尾参照）", () => {
+    expect(() => compile("(.+)\\1")).toThrow(SyntaxError);
+  });
+  it("(?:...) (?=...) などの拡張グループはエラー", () => {
+    expect(() => compile("(?:ab)")).toThrow(SyntaxError);
+    expect(() => compile("(?=ab)")).toThrow(SyntaxError);
   });
 });

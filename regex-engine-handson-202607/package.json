@@ -3,19 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Brzozowski微分でつくる、ReDoSしない実用正規表現エンジン（Nextbeat Build Night Osaka #1 教材）",
+  "description": "Brzozowski微分でつくる、ReDoSしない実用正規表現エンジン（Nextbeat Osaka Lab #1 教材）",
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run tests/spec.test.ts",
+    "test:all": "vitest run",
+    "test:watch": "vitest tests/spec.test.ts",
     "cli": "tsx src/cli.ts",
     "bench:redos": "tsx bench/redos.ts",
     "bench:linear": "tsx bench/linear.ts"
   },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
