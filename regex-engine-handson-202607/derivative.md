@@ -2,6 +2,7 @@
 marp: true
 theme: gaia
 paginate: true
+math: katex
 header: 'Brzozowski 微分 — 正規表現エンジンの理論編'
 footer: '株式会社ネクストビート'
 ---
@@ -22,7 +23,7 @@ Nextbeat Osaka Lab #1「Claude Codeで作る、正規表現エンジン」理論
 
 ## このスライドの位置づけ
 
-- 本編は3段構成: ①ReDoS を見る（掴み）→ **②設計を握る（このスライド）**→ ③設計表を AI に投入して実装（ハンズオン本体）
+- 本編は3段構成: ①ReDoS を見る（掴み）→ **②設計を固める（このスライド）**→ ③設計表を AI に投入して実装（ハンズオン本体）
 - 人間が握るのは**基本設計**。コードは AI（Claude Code / Codex）が書く
 - 設計表（[SPEC.md](./SPEC.md)）とコードが1対1だから、それをそのままプロンプトに貼るだけで実装が立ち上がる
 - このあと約15分、その「設計表」の中身をここで合意する
@@ -58,11 +59,11 @@ Nextbeat Osaka Lab #1「Claude Codeで作る、正規表現エンジン」理論
 
 ---
 
-## なぜ固まるのか② — 分け方は 2^(n-1) 通り
+## なぜ固まるのか② — 分け方は $2^{n-1}$ 通り
 
-長さ n の `a` の列を連続グループに分割する方法 = **2^(n-1) 通り**（各文字間で「切る/切らない」）
+長さ $n$ の `a` の列を連続グループに分割する方法 $= 2^{n-1}$ 通り（各文字間で「切る/切らない」）
 
-| n | 分け方 |
+| $n$ | 分け方 |
 |---|---|
 | 4 | 8 |
 | 10 | 512 |
@@ -76,7 +77,7 @@ Nextbeat Osaka Lab #1「Claude Codeで作る、正規表現エンジン」理論
 ## 処方箋: 「戻らない」エンジン＝DFA
 
 解決策は昔から知られている: **DFA**（決定性有限オートマトン、deterministic finite automaton）
-1文字読むごとに次の状態が一意に決まり、戻る操作を持たない。入力長 n に対して O(n)。
+1文字読むごとに次の状態が一意に決まり、戻る操作を持たない。入力長 $n$ に対して $O(n)$。
 
 でも教科書の作り方は重い: 正規表現 → NFA（Thompson構成）→ 部分集合構成 → DFA 最小化…
 
@@ -104,10 +105,10 @@ abc --a--> bc --b--> c --c--> ε(空文字OK) ✅
 
 | 記号 | 読み | 意味 | コードでは |
 |---|---|---|---|
-| ν(r) | ニュー | r は空文字列 `""` を受理するか | `nullable(r): boolean` |
-| ∂c(r) | デル・文字cでの微分 | r を文字 c で微分した残りの正規表現 | `derivative(r, c): Re` |
+| $\nu(r)$ | ニュー | r は空文字列 `""` を受理するか | `nullable(r): boolean` |
+| $\partial_c(r)$ | デル・文字cでの微分 | r を文字 c で微分した残りの正規表現 | `derivative(r, c): Re` |
 
-ついでに: `∅`（空集合＝何も受理しない）、`ε`（イプシロン＝空文字列だけ受理）、`∧`＝かつ、`∨`＝または
+ついでに: $\emptyset$（空集合＝何も受理しない）、$\varepsilon$（イプシロン＝空文字列だけ受理）、$\wedge$＝かつ、$\vee$＝または
 
 数学の微分との関係は気にしなくていい。**ただの関数名。**
 
@@ -115,10 +116,10 @@ abc --a--> bc --b--> c --c--> ε(空文字OK) ✅
 
 ## 「微分」という名前の理由
 
-積の微分則 `(fg)' = f'g + fg'` は「左を微分した項」＋「右を微分した項」の和。
+積の微分則 $(fg)' = f'g + fg'$ は「左を微分した項」＋「右を微分した項」の和。
 
-後で出てくる連接則 `∂c(rs) = ∂c(r)·s | (ν(r) ? ∂c(s) : ∅)` も、
-第1項が「左を微分した項」、第2項（`ν(r)` が有効化する）が「右を微分した項」——構造は同型。
+後で出てくる連接則 $\partial_c(rs) = \partial_c(r)\cdot s \mid (\nu(r)\;?\;\partial_c(s):\emptyset)$ も、
+第1項が「左を微分した項」、第2項（$\nu(r)$ が有効化する）が「右を微分した項」——構造は同型。
 
 **名前は飾りでなく、規則表がこの形で書ける理由そのもの。**
 
@@ -135,38 +136,38 @@ Re = ∅ (Empty)           -- 何も受理しない
    | Star(body)          -- 星 r*
 ```
 
-`+ ? {n,m} ( )` は全部このコアへ**脱糖**: `r+ → r·r*`、`r? → r|ε`。
+`+ ? {n,m} ( )` は全部このコアへ**脱糖**: $r^+ \to r\cdot r^*$、$r^? \to r\mid\varepsilon$。
 TypeScript では判別タグ付きユニオン（`src/ast.ts`）。中核は**switch 6分岐で閉じる**。
 
 ---
 
-## ν(r) —— 空文字列を受理するか
+## $\nu(r)$ —— 空文字列を受理するか
 
-| r | ν(r) | 理由 |
+| $r$ | $\nu(r)$ | 理由 |
 |---|---|---|
-| ∅ | false | 何も受理しない |
-| ε | true | 空文字列そのもの |
+| $\emptyset$ | false | 何も受理しない |
+| $\varepsilon$ | true | 空文字列そのもの |
 | Class | false | 必ず1文字消費する |
-| r* | true | 0回マッチ（=ε）を含む |
-| rs | ν(r) ∧ ν(s) | 両方が空を許して初めて空 |
-| r\|s | ν(r) ∨ ν(s) | どちらかが空を許せば空 |
+| $r^*$ | true | 0回マッチ（$=\varepsilon$）を含む |
+| $rs$ | $\nu(r) \wedge \nu(s)$ | 両方が空を許して初めて空 |
+| $r\mid s$ | $\nu(r) \vee \nu(s)$ | どちらかが空を許せば空 |
 
 この表が `src/derivative.ts` の `nullable` の switch **6分岐と1対1**。
 
 ---
 
-## ∂c(r) —— 文字 c で微分する
+## $\partial_c(r)$ —— 文字 c で微分する
 
 「r がマッチする文字列のうち、先頭が c のものから c を1文字剥がした残り」にマッチする正規表現。
 
-| r | ∂c(r) |
+| $r$ | $\partial_c(r)$ |
 |---|---|
-| ∅ | ∅ |
-| ε | ∅ |
-| Class | c ∈ class ? ε : ∅ |
-| r* | ∂c(r) · r* |
-| rs | ∂c(r)·s **\| (ν(r) ? ∂c(s) : ∅)** ★ |
-| r\|s | ∂c(r) \| ∂c(s) |
+| $\emptyset$ | $\emptyset$ |
+| $\varepsilon$ | $\emptyset$ |
+| Class | $c \in \text{class} \;?\; \varepsilon : \emptyset$ |
+| $r^*$ | $\partial_c(r) \cdot r^*$ |
+| $rs$ | $\partial_c(r)\cdot s \mid (\nu(r)\;?\;\partial_c(s):\emptyset)$ ★ |
+| $r\mid s$ | $\partial_c(r) \mid \partial_c(s)$ |
 
 6行中5行は「見たまま」。★の連接則だけが非自明 → 次のスライドで。
 
@@ -174,45 +175,41 @@ TypeScript では判別タグ付きユニオン（`src/ast.ts`）。中核は**s
 
 ## 唯一の非自明ポイント: 連接則の★
 
-`∂c(rs) = ∂c(r)·s | (ν(r) ? ∂c(s) : ∅)` を日本語に分解:
+$$
+\partial_c(rs) = \underbrace{\partial_c(r)\cdot s}_{\text{左の }r\text{ が食べた（常にある枝）}} \;\mid\; \underbrace{\bigl(\nu(r)\;?\;\partial_c(s):\emptyset\bigr)}_{\text{左を0文字スキップして右の }s\text{ が食べた（}\nu(r)=\text{true の時だけ}\text{）}}
+$$
 
-```
-rs の先頭の c は、どっちが食べた？
-├─ 左の r が食べた   → 残りは ∂c(r)·s      （常にある枝）
-└─ 左の r を「0文字でスキップ」して右の s が食べた
-                    → 残りは ∂c(s)
-                      ただし r が空文字列を許す（ν(r)=true）時だけ！
-```
-
-この ν 項を忘れても**大半のテストは通ってしまう**（壊れるのは「左がεを含む連接」だけ）。
+この $\nu(r)$ 項を忘れても**大半のテストは通ってしまう**（壊れるのは「左が $\varepsilon$ を含む連接」だけ）。
 
 ---
 
 ## 手トレース: `a?b` を `'b'` で微分する
 
-`a?b` は脱糖して `(a|ε)·b`。入力 `"b"` を1文字目 `b` で微分する:
+`a?b` は脱糖して $(a\mid\varepsilon)\cdot b$。入力 `"b"` を1文字目 `b` で微分する:
 
-```
-∂b( (a|ε)·b )
-  = ∂b(a|ε)·b | (ν(a|ε) ? ∂b(b) : ∅)        ← 連接則
-    ∂b(a|ε) = ∂b(a) | ∂b(ε) = ∅ | ∅ = ∅      ← 第1項は消える
-    ν(a|ε)  = false ∨ true = true             ← ★第2項が生きる
-  = ∅·b | ∂b(b) = ∅ | ε = ε
-ν(ε) = true → "b" は受理される ✅
-```
+$$
+\begin{aligned}
+\partial_b\bigl((a\mid\varepsilon)\cdot b\bigr) &= \partial_b(a\mid\varepsilon)\cdot b \mid \bigl(\nu(a\mid\varepsilon)\;?\;\partial_b(b):\emptyset\bigr) &&\text{連接則}\\
+\partial_b(a\mid\varepsilon) &= \partial_b(a)\mid\partial_b(\varepsilon) = \emptyset\mid\emptyset=\emptyset &&\text{第1項は消える}\\
+\nu(a\mid\varepsilon) &= \text{false}\vee\text{true} = \text{true} &&\text{第2項が生きる}\\
+&= \emptyset\cdot b \mid \partial_b(b) = \emptyset\mid\varepsilon = \varepsilon
+\end{aligned}
+$$
 
-ν 項を忘れていたら結果は `∅` のまま、`"b"` は不受理になっていた。
+$\nu(\varepsilon) = \text{true} \Rightarrow$ `"b"` は受理される ✅
+
+$\nu$ 項を忘れていたら結果は $\emptyset$ のまま、`"b"` は不受理になっていた。
 
 ---
 
 ## このスライドがクライマックス
 
-- `"ab"` は ν 項なしでも通る（∂a(a?b)=b、∂b(b)=ε）
-- でも `"b"`（a を0回スキップ）は **ν 項だけが結果を生む唯一の経路**
+- `"ab"` は $\nu$ 項なしでも通る（$\partial_a(\text{a?b})=b$、$\partial_b(b)=\varepsilon$）
+- でも `"b"`（a を0回スキップ）は **$\nu$ 項だけが結果を生む唯一の経路**
 - だから他のテストが緑のまま、この1件だけ静かに壊れる
 - `tests/spec.test.ts` の「a?b トラップ」がこれを検出する
 
-**AI の生成コードが `a?b` テストで赤くなったら、疑う場所は連接則の ν 項一択。**
+**AI の生成コードが `a?b` テストで赤くなったら、疑う場所は連接則の $\nu$ 項一択。**
 
 ---
 
@@ -237,16 +234,18 @@ function match(re: Re, input: string): boolean {
 
 `match` は毎回微分を計算し直す。→ **微分結果をキャッシュしたら？**
 
-`ab*` の全微分を書き出すと:
+$ab^*$ の全微分を書き出すと:
 
-```
-∂a(ab*) = b*    ∂b(ab*) = ∅
-∂a(b*)  = ∅     ∂b(b*)  = b*   ← 自分に戻る！
-∂a(∅)   = ∅     ∂b(∅)   = ∅   ← ∅は何を食べても∅
-```
+$$
+\begin{aligned}
+\partial_a(ab^*) &= b^* & \partial_b(ab^*) &= \emptyset\\
+\partial_a(b^*) &= \emptyset & \partial_b(b^*) &= b^* &&\text{自分に戻る！}\\
+\partial_a(\emptyset) &= \emptyset & \partial_b(\emptyset) &= \emptyset &&\emptyset\text{ は何を食べても }\emptyset
+\end{aligned}
+$$
 
-出てくる正規表現は **{ab*, b*, ∅} の3つで打ち止め**。
-状態＝正規表現、遷移＝微分、受理＝ν。**これは DFA の定義そのもの。**
+出てくる正規表現は **$\{ab^*,\ b^*,\ \emptyset\}$ の3つで打ち止め**。
+状態＝正規表現、遷移＝微分、受理＝$\nu$。**これは DFA の定義そのもの。**
 
 ---
 
@@ -273,11 +272,9 @@ step(id, c) {
 
 微分は新しい正規表現を**生み続ける**。素朴にノードを作ると:
 
-```
-ε·b* と b*        ← 意味は同じ、構造が違う
-r|r と r          ← 意味は同じ、構造が違う
-a|b と b|a        ← 意味は同じ、構造が違う
-```
+- $\varepsilon\cdot b^*$ と $b^*$ ← 意味は同じ、構造が違う
+- $r\mid r$ と $r$ ← 意味は同じ、構造が違う
+- $a\mid b$ と $b\mid a$ ← 意味は同じ、構造が違う
 
 キャッシュのキーが一致しない → メモが永遠にヒットしない → **状態が無限増殖**。
 `(a+)+` がまさにこれで爆発する（ReDoS を殺すはずのエンジンが別の形で死ぬ）。
@@ -293,9 +290,9 @@ a|b と b|a        ← 意味は同じ、構造が違う
 
 | 関数 | 規則 |
 |---|---|
-| mkAlt | `∅\|r=r`（吸収）/ `r\|r=r`（冪等**I**）/ `r\|s=s\|r`（可換**C**→キーでソート）/ フラット化（結合**A**） |
-| mkConcat | `∅·r=r·∅=∅`（零元）/ `ε·r=r·ε=r`（単位元）/ 右結合に固定 |
-| mkStar | `∅*=ε` / `ε*=ε` / `(r*)*=r*` |
+| mkAlt | $r\mid\emptyset=r$（吸収）/ $r\mid r=r$（冪等**I**）/ $r\mid s=s\mid r$（可換**C**→キーでソート）/ フラット化（結合**A**） |
+| mkConcat | $\emptyset\cdot r=r\cdot\emptyset=\emptyset$（零元）/ $\varepsilon\cdot r=r\cdot\varepsilon=r$（単位元）/ 右結合に固定 |
+| mkStar | $\emptyset^*=\varepsilon$ / $\varepsilon^*=\varepsilon$ / $(r^*)^*=r^*$ |
 
 ACI = Associativity・Commutativity・Idempotence。この最小限の正規化で状態が有限個に収まる。
 
@@ -314,7 +311,7 @@ pattern = (a+)+   ← 標準RegExpが長い入力で固まるやつ
 10,000,000      約200      2（一定）
 ```
 
-読み方: ①入力10倍→時間ほぼ10倍＝**O(n)** ②状態数が入力長に依存しない＝正規化が効いている証拠。
+読み方: ①入力10倍→時間ほぼ10倍＝**$O(n)$** ②状態数が入力長に依存しない＝正規化が効いている証拠。
 
 ---
 
@@ -334,8 +331,8 @@ pattern = (a+)+   ← 標準RegExpが長い入力で固まるやつ
 
 ## まとめ & このあとやること
 
-1. 状態＝正規表現そのもの。遷移＝微分 ∂。受理＝ν。**メモ化したら DFA**
-2. 非自明なのは連接則の ν 項ただ1つ（`a?b` トラップで検出可能）
+1. 状態＝正規表現そのもの。遷移＝微分 $\partial$。受理＝$\nu$。**メモ化したら DFA**
+2. 非自明なのは連接則の $\nu$ 項ただ1つ（`a?b` トラップで検出可能）
 3. 正規化（ACI）が状態を有限に抑え、後方参照を入れない判断が線形を**保証**する
 
 このあと: [SPEC.md](./SPEC.md) の規則表を [AGENT_PROMPTS.md](./AGENT_PROMPTS.md) ①のプロンプトで
