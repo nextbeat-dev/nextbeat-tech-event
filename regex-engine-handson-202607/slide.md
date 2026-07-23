@@ -2,6 +2,7 @@
 marp: true
 theme: gaia
 paginate: true
+math: katex
 header: 'Claude Codeで作る、正規表現エンジン'
 footer: '株式会社ネクストビート'
 ---
@@ -52,7 +53,7 @@ native.test("a".repeat(n) + "X");
 ## なぜ固まるのか（1分で）
 
 - `(a+)+` に長い `a` の列＋末尾1文字を食わせると、標準 RegExp は「`a` の列を何グループに分けるか」を全探索する
-- 分け方は **2^(n-1) 通り**（n=28 で約1.3億）。1文字増えるたび2倍
+- 分け方は $2^{n-1}$ **通り**（n=28 で約1.3億）。1文字増えるたび2倍
 - これが**バックトラッキング型**の宿命
 
 詳しい理屈・数式トレースは [`derivative.md`](./derivative.pdf) へ。今日はこの後 **15分で設計を握り**、
@@ -102,10 +103,10 @@ pnpm test                   # → 27件中22件が赤
 
 [SPEC.md](./SPEC.md) を上から:
 
-1. 記号の読み方（ν・∂c・∧・∨）
-2. nullable ν(r) の表（6行）
-3. derivative ∂c(r) の表（6行）— ★連接則の ν 項に注目
-4. 手トレース: `∂b(a?b)` を入力 `"b"` で計算（[`derivative.md`](./derivative.pdf) 参照）
+1. 記号の読み方（$\nu$・$\partial_c$・$\wedge$・$\vee$）
+2. nullable $\nu(r)$ の表（6行）
+3. derivative $\partial_c(r)$ の表（6行）— ★連接則の $\nu$ 項に注目
+4. 手トレース: $\partial_b(\text{a?b})$ を入力 `"b"` で計算（[`derivative.md`](./derivative.pdf) 参照）
 5. `(a+)+` の微分列が同じ式に戻っていく予告（②への伏線）
 
 このあとこの規則表を**そのまま**プロンプトに貼る。
