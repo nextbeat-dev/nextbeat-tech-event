@@ -5,9 +5,9 @@ Claude Code へのプロンプトに落とす。**設計表とコードが1対1�
 
 ## 「微分」という名前の理由
 
-積の微分則 `(fg)' = f'g + fg'` は「左を微分した項」＋「右を微分した項」の和。後述の連接則
-`∂c(rs) = ∂c(r)·s | (ν(r) ? ∂c(s) : ∅)` も第1項が「左を微分した項」、第2項（`ν(r)` が有効化する）
-が「右を微分した項」で、構造は同型。名前は飾りでなく、規則表がこの形で書ける理由そのものである。
+積の微分則 $(fg)' = f'g + fg'$ は「左を微分した項」＋「右を微分した項」の和。後述の連接則
+$\partial_c(rs) = \partial_c(r)\cdot s \mid (\nu(r)\;?\;\partial_c(s):\emptyset)$ も第1項が「左を微分した項」、
+第2項（$\nu(r)$ が有効化する）が「右を微分した項」で、構造は同型。名前は飾りでなく、規則表がこの形で書ける理由そのものである。
 
 ## AST（最小コア6種）
 
@@ -22,77 +22,85 @@ Re = ∅(Empty)              -- 何も受理しない（空集合の言語）
 
 `+ ? {n,m} ( )` は全てこのコアへ脱糖する（パーサの仕事）。
 
-## nullable ν(r): r は空文字列 "" を受理するか
+## nullable $\nu(r)$: r は空文字列 `""` を受理するか
 
-記号の読み方: `ν` はニュー（nullable）、`∂c` はデル・文字cでの微分、`∧` はかつ（AND）、
-`∨` はまたは（OR）、`·` は連接。
+記号の読み方: $\nu$ はニュー（nullable）、$\partial_c$ はデル・文字cでの微分、$\wedge$ はかつ（AND）、
+$\vee$ はまたは（OR）、$\cdot$ は連接。
 
-| r | ν(r) |
+| $r$ | $\nu(r)$ |
 |---|---|
-| ∅ | false |
-| ε | true |
+| $\emptyset$ | false |
+| $\varepsilon$ | true |
 | Class | false |
-| r* | true |
-| rs | ν(r) ∧ ν(s) |
-| r\|s | ν(r) ∨ ν(s) |
+| $r^*$ | true |
+| $rs$ | $\nu(r) \wedge \nu(s)$ |
+| $r\mid s$ | $\nu(r) \vee \nu(s)$ |
 
-## derivative ∂c(r): 文字 c で r を微分
+## derivative $\partial_c(r)$: 文字 c で r を微分
 
 「r がマッチする文字列のうち、先頭が c のものから c を1文字剥がした残り」にマッチする正規表現。
 
-| r | ∂c(r) |
+| $r$ | $\partial_c(r)$ |
 |---|---|
-| ∅ | ∅ |
-| ε | ∅ |
-| Class | c ∈ class ? ε : ∅ |
-| r* | ∂c(r) · r* |
-| rs | ∂c(r)·s **\| (ν(r) ? ∂c(s) : ∅)** ← ★唯一の非自明ポイント |
-| r\|s | ∂c(r) \| ∂c(s) |
+| $\emptyset$ | $\emptyset$ |
+| $\varepsilon$ | $\emptyset$ |
+| Class | $c \in \text{class} \;?\; \varepsilon : \emptyset$ |
+| $r^*$ | $\partial_c(r) \cdot r^*$ |
+| $rs$ | $\partial_c(r)\cdot s \mid (\nu(r)\;?\;\partial_c(s):\emptyset)$ ←★唯一の非自明ポイント |
+| $r\mid s$ | $\partial_c(r) \mid \partial_c(s)$ |
 
-**罠**: 連接則の `ν(r) なら ∂c(s) も足す` を忘れると、`a?b`（左がεを含む連接）だけが壊れる。
+**罠**: 連接則の「$\nu(r)$ なら $\partial_c(s)$ も足す」を忘れると、`a?b`（左が $\varepsilon$ を含む連接）だけが壊れる。
 他のテストは通るので発見が遅れる。`tests/spec.test.ts` の「a?b トラップ」がこれを即検出する。
 
 ## 計算例
 
-### 主トレース: ∂b(a?b) を入力 "b" で計算する
+### 主トレース: $\partial_b(\text{a?b})$ を入力 `"b"` で計算する
 
-`a?b` は脱糖すると `(a|ε)·b`。入力 `"b"` を1文字目 `b` で微分する。
+`a?b` は脱糖すると $(a\mid\varepsilon)\cdot b$。入力 `"b"` を1文字目 `b` で微分する。
 
-```
-∂b( (a|ε)·b )
-  = ∂b(a|ε)·b | (ν(a|ε) ? ∂b(b) : ∅)        ← 連接則
-    ∂b(a|ε) = ∂b(a) | ∂b(ε) = ∅ | ∅ = ∅      ← 第1項の材料
-    ν(a|ε)  = ν(a) ∨ ν(ε) = false ∨ true = true  ← 第2項の条件
-  = (∅·b) | (true ? ∂b(b) : ∅)
-  = ∅ | ∂b(b)                                 ← 第1項は ∅·b=∅ で消える
-  = ∅ | ε                                     ← ∂b(b)=ε
-  = ε
-ν(ε) = true → "b" は受理される ✅
-```
+$$
+\begin{aligned}
+\partial_b\bigl((a\mid\varepsilon)\cdot b\bigr)
+&= \partial_b(a\mid\varepsilon)\cdot b \mid \bigl(\nu(a\mid\varepsilon)\;?\;\partial_b(b):\emptyset\bigr) &&\text{連接則}\\
+\partial_b(a\mid\varepsilon) &= \partial_b(a)\mid\partial_b(\varepsilon) = \emptyset\mid\emptyset=\emptyset &&\text{第1項の材料}\\
+\nu(a\mid\varepsilon) &= \nu(a)\vee\nu(\varepsilon) = \text{false}\vee\text{true} = \text{true} &&\text{第2項の条件}\\
+&= (\emptyset\cdot b)\mid(\text{true}\;?\;\partial_b(b):\emptyset)\\
+&= \emptyset \mid \partial_b(b) &&\text{第1項は } \emptyset\cdot b=\emptyset \text{ で消える}\\
+&= \emptyset \mid \varepsilon &&\partial_b(b)=\varepsilon\\
+&= \varepsilon
+\end{aligned}
+$$
 
-★もし `ν(r) ? ∂c(s) : ∅` の `ν(r)` 項を忘れて `∂c(rs) = ∂c(r)·s` とだけ実装していたら、
-第1項が `∅` で消えた時点で結果は `∅` のままになり、`"b"` は不受理になっていた。
+$\nu(\varepsilon) = \text{true} \Rightarrow$ `"b"` は受理される ✅
+
+★もし $\nu(r)\;?\;\partial_c(s):\emptyset$ の $\nu(r)$ 項を忘れて $\partial_c(rs) = \partial_c(r)\cdot s$ とだけ実装していたら、
+第1項が $\emptyset$ で消えた時点で結果は $\emptyset$ のままになり、`"b"` は不受理になっていた。
 `tests/spec.test.ts` の「a?b トラップ」テストがまさにこの欠落を検出する。
 
-### 補助トレース: 同じ a?b を入力 "ab" で計算する
+### 補助トレース: 同じ `a?b` を入力 `"ab"` で計算する
 
-```
-∂a( (a|ε)·b ) = ∂a(a|ε)·b | (ν(a|ε) ? ∂a(b) : ∅) = ε·b | ∅ = b
-∂b( b )       = ε
-ν(ε) = true → "ab" は受理される ✅
-```
+$$
+\begin{aligned}
+\partial_a\bigl((a\mid\varepsilon)\cdot b\bigr) &= \partial_a(a\mid\varepsilon)\cdot b \mid \bigl(\nu(a\mid\varepsilon)\;?\;\partial_a(b):\emptyset\bigr) = \varepsilon\cdot b \mid \emptyset = b\\
+\partial_b(b) &= \varepsilon
+\end{aligned}
+$$
+
+$\nu(\varepsilon) = \text{true} \Rightarrow$ `"ab"` は受理される ✅
 
 ### 収束の例: 微分を繰り返しても正規表現の種類は有限個で打ち止めになる
 
-`ab*` を例に、出てくる状態を全部書き出す:
+$ab^*$ を例に、出てくる状態を全部書き出す:
 
-```
-∂a(ab*) = b*     ∂b(ab*) = ∅
-∂a(b*)  = ∅      ∂b(b*)  = b*   ← 自分自身に戻る
-∂a(∅)   = ∅      ∂b(∅)   = ∅   ← ∅ は何を食べても ∅
-```
+$$
+\begin{aligned}
+\partial_a(ab^*) &= b^* & \partial_b(ab^*) &= \emptyset\\
+\partial_a(b^*) &= \emptyset & \partial_b(b^*) &= b^* &&\text{自分自身に戻る}\\
+\partial_a(\emptyset) &= \emptyset & \partial_b(\emptyset) &= \emptyset &&\emptyset \text{ は何を食べても } \emptyset
+\end{aligned}
+$$
 
-現れる正規表現は `{ab*, b*, ∅}` の3つだけで、以降どれだけ微分してもこの3つの中を巡回する。
+現れる正規表現は $\{ab^*,\ b^*,\ \emptyset\}$ の3つだけで、以降どれだけ微分してもこの3つの中を巡回する。
 これが後述の遅延DFAの「状態が有限個に収まる」の最小の実例。
 
 ## マッチング
@@ -129,9 +137,9 @@ function matchLoop(re: Re, input: string): boolean {
 遅延DFAの状態が収束しない（`(a+)+` で状態が指数爆発）。スマートコンストラクタに
 最小限の正規化を内蔵して状態を有限化する：
 
-- **mkAlt** : `r|∅=r`, `∅|r=r`（吸収）/ `r|r=r`（冪等）/ `r|s=s|r`（可換・順序固定）/ 結合フラット化
-- **mkConcat** : `∅·r=∅`, `r·∅=∅`（零元）/ `ε·r=r`, `r·ε=r`（単位元）/ 右結合に固定
-- **mkStar** : `∅*=ε`, `ε*=ε` / `(r*)*=r*`
+- **mkAlt** : $r\mid\emptyset=r$, $\emptyset\mid r=r$（吸収）/ $r\mid r=r$（冪等）/ $r\mid s=s\mid r$（可換・順序固定）/ 結合フラット化
+- **mkConcat** : $\emptyset\cdot r=\emptyset$, $r\cdot\emptyset=\emptyset$（零元）/ $\varepsilon\cdot r=r$, $r\cdot\varepsilon=r$（単位元）/ 右結合に固定
+- **mkStar** : $\emptyset^*=\varepsilon$, $\varepsilon^*=\varepsilon$ / $(r^*)^*=r^*$
 
 状態の同一視キー（`canonicalKey`）は**正規化後の決定的な構造文字列**を使う。
 オブジェクト参照をキーにすると同じ正規表現が別状態になり、状態が無限増殖する。

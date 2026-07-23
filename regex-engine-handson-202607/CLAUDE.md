@@ -82,7 +82,7 @@ pattern string --parser.ts--> Re (AST) --match.ts (LazyDfa)--> boolean
   identity or a raw object literal as a Map key for `Re` nodes.
 - **`src/derivative.ts`** — `nullable(r)` (does `r` accept `""`) and `derivative(r, c)` (the regex
   matching what's left after consuming char `c`). The one non-obvious rule: for `Concat(r, s)`,
-  `∂c(rs) = ∂c(r)·s | (nullable(r) ? ∂c(s) : ∅)` — the `nullable(r)` term is easy to drop and only
+  $\partial_c(rs) = \partial_c(r)\cdot s \mid (\text{nullable}(r)\;?\;\partial_c(s):\emptyset)$ — the `nullable(r)` term is easy to drop and only
   breaks patterns like `a?b` (left side can match empty), which is why
   `tests/spec.test.ts` has a dedicated "a?b トラップ" test — other cases keep passing even when
   this is wrong.
@@ -95,7 +95,7 @@ pattern string --parser.ts--> Re (AST) --match.ts (LazyDfa)--> boolean
   `(stateId, char) -> nextStateId` on first use, i.e. builds a DFA on demand). `toSearch` reduces
   substring search to full match by wrapping with `.* re .*`.
 - **`src/parser.ts`** — recursive-descent parser, pattern string → `Re`. Precedence: `|` < concat
-  < postfix quantifier < atom. Desugars `r+ -> r·r*`, `r? -> r|ε`, and now also `{n,m}` (`r{n}`,
+  < postfix quantifier < atom. Desugars $r^+ \to r\cdot r^*$, $r^? \to r\mid\varepsilon$, and now also `{n,m}` (`r{n}`,
   `r{n,}`, `r{n,m}` all desugar into the same core via repeated `mkConcat`/`mkAlt`, matching
   `SPEC.md`'s claim that these are sugar, not new AST). Unsupported syntax participants might
   bring in (`^` `$`, unknown letter escapes like `\b \B \D \W \S`, `\1`-style backreferences,

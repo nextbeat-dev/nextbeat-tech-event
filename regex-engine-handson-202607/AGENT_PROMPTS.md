@@ -52,7 +52,7 @@ src/normalize.ts の mkAlt / mkConcat / mkStar に、SPEC.md「正規化（ACI�
 および pnpm bench:linear で状態数が入力長によらず一定であることを確認してください。
 ```
 
-→ `pnpm test:all` が全緑になり、`pnpm bench:linear` で **状態数が一定・入力10倍で時間10倍（O(n)）** になれば完了。
+→ `pnpm test:all` が全緑になり、`pnpm bench:linear` で **状態数が一定・入力10倍で時間10倍（$O(n)$）** になれば完了。
 
 ---
 
